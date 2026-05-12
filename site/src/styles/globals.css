@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sandbox: #2563eb;
+  --color-sandbox-dark: #1d4ed8;
+}

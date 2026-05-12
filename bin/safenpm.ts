@@ -14,6 +14,8 @@ import { runLinux } from '../lib/sandbox-linux.ts';
 import { runMacos } from '../lib/sandbox-macos.ts';
 import * as log from '../lib/log.ts';
 
+// console.debug('SAFENPM')
+
 const SAFENPM_HOME = process.env.SAFENPM_HOME ?? path.join(process.env.HOME ?? '', '.safenpm');
 const SHIM_DIR = path.join(SAFENPM_HOME, 'bin');
 
