@@ -7,8 +7,14 @@
   "engines": {
     "node": ">=20"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "bin": {
-    "safenpm-setup": "install.sh"
+    "safenpm-setup": "install.sh",
+    "safenpm-init": "scripts/init.cjs"
   },
   "main": "dist/safenpm.cjs",
   "module": "dist/safenpm.mjs",
@@ -26,13 +32,16 @@
     "install.sh",
     "uninstall.sh",
     "lib/rcedit.sh",
+    "scripts/init.cjs",
+    "scripts/bootstrap-template.cjs",
     "README.md",
     ".nvmrc"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepack": "node scripts/build.mjs",
-    "test": "node --test 'tests/**/*.test.ts'",
+    "test": "node --experimental-strip-types --test 'tests/**/*.test.ts'",
+    "test:docker": "docker build -t safenpm-test -f tests/Dockerfile . && docker run --rm --privileged safenpm-test",
     "typecheck": "tsc --noEmit",
     "check": "eslint .",
     "fix": "eslint . --fix",

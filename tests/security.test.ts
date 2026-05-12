@@ -47,7 +47,7 @@ type Results = {
     home_entries: string[] | null;
 };
 
-const HOST_FIXTURE_PATH = path.join(process.env.HOME!, '.safenpm-host-secret-fixture');
+const HOST_FIXTURE_PATH = path.join(process.env.HOME!, '.safenpm-host-sec-test');
 const HOST_FIXTURE_CONTENT = 'IF-YOU-CAN-READ-THIS-THE-SANDBOX-LEAKED';
 
 function hasBwrap(): boolean {

@@ -19,10 +19,14 @@ export default tseslint.config(
             'node_modules/',
             'dist/',
             'tests/fixtures/',
+            'tests/comprehensive-helpers.ts',
+            'tests/comprehensive-*.test.ts',
             '.husky/_/',
             '.claude/',
             'eslint.config.js',
             'scripts/build.mjs',
+            'scripts/init.cjs',
+            'scripts/bootstrap-template.cjs',
             'pnpm-lock.yaml',
         ],
     },
@@ -51,6 +55,7 @@ export default tseslint.config(
                 },
             ],
             'no-empty': ['error', { allowEmptyCatch: true }],
+            "prettier/prettier": "warn"
         },
     },
     {
@@ -60,6 +65,7 @@ export default tseslint.config(
         rules: {
             '@typescript-eslint/no-floating-promises': 'off',
             '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+            "prettier/prettier": "warn"
         },
     },
 

@@ -23,8 +23,9 @@ const SECRET_FILE_PATTERNS: readonly RegExp[] = [
     /\.(gpg|asc)$/i,
     /^gcloud-.+\.json$/i,
     /^service-account.*\.json$/i,
-    /^\.npmrc$/i,
-    /^\.yarnrc(\.yml)?$/i,
+    // .npmrc / .yarnrc* are NOT masked — package managers write to them
+    // legitimately during install.  $HOME/.npmrc is protected by being
+    // mounted read-only via homeStateDirs() instead.
 ];
 
 const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules', '.git', '.pnpm-store']);

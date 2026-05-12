@@ -42,7 +42,7 @@ const results = {
     home_ssh_dir: tryListDir(path.join(home, '.ssh')),
     home_aws_dir: tryListDir(path.join(home, '.aws')),
     home_gnupg_dir: tryListDir(path.join(home, '.gnupg')),
-    host_planted_secret: tryReadFile(path.join(home, '.safenpm-host-secret-fixture')),
+    host_planted_secret: tryReadFile(path.join(home, '.safenpm-host-sec-test')),
 
     // Secret-shaped env vars — should all be unset inside the sandbox.
     env_aws: process.env.AWS_SECRET_ACCESS_KEY ?? null,

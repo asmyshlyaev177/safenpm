@@ -199,19 +199,34 @@ done
 install -m 0644 "$SRC_DIR/lib/rcedit.sh" "$LIB_DIR/rcedit.sh"
 install -m 0755 "$SRC_DIR/uninstall.sh" "$SAFENPM_HOME/uninstall.sh"
 
-# Shims default to ESM; users wanting CJS can set SAFENPM_FORMAT=cjs in
-# their shell rc before running an install command.
-DISPATCHER_DEFAULT="safenpm.mjs"
 for pm in npm pnpm yarn bun; do
-    cat >"$SHIM_DIR/$pm" <<EOF
+    cat >"$SHIM_DIR/$pm" <<'SHIMEOF'
 #!/usr/bin/env bash
-# safenpm shim for $pm — forwards to the bundled dispatcher.
-# Default is ESM; export SAFENPM_FORMAT=cjs to force the CJS bundle.
-case "\${SAFENPM_FORMAT:-mjs}" in
-    cjs) exec "$SHIM_DIR/safenpm.cjs" $pm "\$@" ;;
-    *)   exec "$SHIM_DIR/$DISPATCHER_DEFAULT" $pm "\$@" ;;
-esac
-EOF
+# safenpm shim — intercepts install commands and routes them through the
+# safenpm sandbox.  Delegates to the project-local safenpm when the current
+# working directory has it as a dependency; falls back to the global install.
+set -euo pipefail
+SHIMEOF
+    # The SHIM_DIR variable is intentionally expanded in the here-doc body
+    # for the "global fallback" line.  The detection logic is static.
+    cat >>"$SHIM_DIR/$pm" <<SHIMEOF
+SHIM_DIR="$SHIM_DIR"
+PM="$pm"
+DISPATCHER="\$SHIM_DIR/safenpm.mjs"
+SHIMEOF
+    cat >>"$SHIM_DIR/$pm" <<'SHIMEOF'
+# Detect project-local safenpm (handles npm flat, pnpm nested, yarn PnP).
+LOCAL="$(node -e "
+try {
+  var p = require.resolve('safenpm/dist/safenpm.mjs', { paths: [process.cwd()] });
+  if (p) console.log(p);
+} catch(e) {}
+" 2>/dev/null)"
+if [ -n "$LOCAL" ] && [ -f "$LOCAL" ]; then
+    exec node "$LOCAL" "$PM" "$@"
+fi
+exec node "$DISPATCHER" "$PM" "$@"
+SHIMEOF
     chmod 0755 "$SHIM_DIR/$pm"
 done
 

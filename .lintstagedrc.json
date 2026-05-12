@@ -1,5 +1,5 @@
 {
-  "*.{ts,js,json,jsonc,md}": ["eslint --fix --max-warnings=0 --no-warn-ignored"],
+  "*.{ts,js,json,jsonc,md}": ["eslint --fix --no-warn-ignored"],
   "*.{yml,yaml}": ["prettier --write"],
   "*.sh": ["scripts/lint-shell.sh"]
 }

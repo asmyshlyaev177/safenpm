@@ -19,6 +19,7 @@ const SHIM_DIR = path.join(SAFENPM_HOME, 'bin');
 
 function findRealBinary(name: string): string | null {
     const selfPath = path.join(SHIM_DIR, name);
+    const defaultShimPath = path.join(process.env.HOME ?? '', '.safenpm', 'bin', name);
     const dirs = (process.env.PATH ?? '').split(':');
     for (const d of dirs) {
         if (!d || d === SHIM_DIR) continue;
@@ -26,14 +27,13 @@ function findRealBinary(name: string): string | null {
         try {
             const st = fs.statSync(candidate);
             if (!st.isFile()) continue;
-            // Guard against a symlink that loops back to our shim.
             let resolved = candidate;
             try {
                 resolved = fs.realpathSync(candidate);
             } catch {
                 // unresolved symlink — still try the candidate path itself
             }
-            if (resolved === selfPath) continue;
+            if (resolved === selfPath || resolved === defaultShimPath) continue;
             fs.accessSync(candidate, fs.constants.X_OK);
             return candidate;
         } catch {

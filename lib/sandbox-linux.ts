@@ -144,11 +144,17 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
 
     // Strip our shim dir from PATH inside the sandbox.
     const shimDir = path.join(safenpmHome, 'bin');
+    const defaultShimDir = path.join(home, '.safenpm', 'bin');
     const cleanPath = (process.env.PATH ?? '')
         .split(':')
-        .filter((d) => d && d !== shimDir)
+        .filter((d) => d && d !== shimDir && d !== defaultShimDir)
         .join(':');
     args.push('--setenv', 'PATH', cleanPath);
+
+    // Signal to nested preinstall hooks (e.g. the per-project bootstrap
+    // stub) that they're already running under the sandbox and should be
+    // a no-op rather than re-entering.
+    args.push('--setenv', 'SAFENPM_ACTIVE', '1');
 
     return { args, maskedSecrets, strippedEnvs };
 }
