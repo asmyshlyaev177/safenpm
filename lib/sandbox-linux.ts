@@ -72,13 +72,9 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
         '--ro-bind-try',
         '/run/resolvconf',
         '/run/resolvconf',
-        // work directory: read-write, no secrets (they get masked below)
-        '--bind',
-        workdir,
-        workdir,
-        '--chdir',
-        workdir,
-        // Wipe $HOME, then re-expose only what the package manager needs.
+        // Wipe $HOME first, then re-expose the workdir and pm state on top
+        // of the empty tmpfs. The order matters: if workdir lives inside
+        // $HOME (very common), the tmpfs would otherwise shadow the bind.
         '--tmpfs',
         home,
         '--setenv',
@@ -111,7 +107,7 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
         // realpath can fail on broken symlinks; nothing we can do.
     }
 
-    // Expose pm-specific $HOME state.
+    // Expose pm-specific $HOME state (mounts on top of the tmpfs above).
     const { ro, rw } = homeStateDirs(pm, home);
     for (const p of ro) {
         if (fs.existsSync(p)) args.push('--ro-bind', p, p);
@@ -124,6 +120,11 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
         }
         if (fs.existsSync(p)) args.push('--bind', p, p);
     }
+
+    // Bind the work directory LAST so it survives even if it lives inside
+    // $HOME (the tmpfs above would otherwise shadow it). --chdir applies
+    // after all mounts.
+    args.push('--bind', workdir, workdir, '--chdir', workdir);
 
     // Mask each detected secret with /dev/null (read as a zero-byte file).
     const maskedSecrets: string[] = [];
