@@ -125,3 +125,94 @@ test(
         }
     },
 );
+
+test(
+    `global install does not affect package manager for other directories`,
+    { skip: skipReason },
+    async () => {
+        const testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm-global-'));
+        const safenpmHome = path.join(testRoot, 'safenpm');
+        const shimDir = path.join(safenpmHome, 'bin');
+        const prefix = nodePrefix();
+
+        try {
+            // 1. Set up shim.
+            await fsp.mkdir(shimDir, { recursive: true });
+            await fsp.copyFile(BUNDLE, path.join(shimDir, 'safenpm.mjs'));
+            await fsp.chmod(path.join(shimDir, 'safenpm.mjs'), 0o755);
+            for (const pm of PACKAGE_MANAGERS) {
+                const shim = path.join(shimDir, pm);
+                await fsp.writeFile(
+                    shim,
+                    `#!/usr/bin/env bash\nexec "${shimDir}/safenpm.mjs" ${pm} "$@"\n`,
+                );
+                await fsp.chmod(shim, 0o755);
+            }
+
+            const env = {
+                ...process.env,
+                SAFENPM_HOME: safenpmHome,
+                PATH: `${shimDir}:${process.env.PATH}`,
+                AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
+                NPM_TOKEN: 'npm_planted_leak',
+            };
+
+            // 2. Uninstall any leftover.
+            try {
+                execFileSync('npm', ['uninstall', '-g', TEST_PKG], { stdio: 'pipe' });
+            } catch {
+                // not installed
+            }
+
+            // 3. Global install through shim.
+            execFileSync('npm', ['i', '-g', TEST_PKG], { env, stdio: 'pipe' });
+
+            // 4. Create a separate project directory and run a local install
+            //    using the REAL npm (no shim on PATH).
+            const projectDir = path.join(testRoot, 'other-project');
+            await fsp.mkdir(projectDir);
+            await fsp.writeFile(
+                path.join(projectDir, 'package.json'),
+                JSON.stringify({
+                    name: 'test-after-global',
+                    version: '1.0.0',
+                    private: true,
+                    dependencies: { 'is-number': '^7.0.0' },
+                }),
+            );
+
+            // Run npm install WITHOUT the safenpm shim in PATH
+            // to verify the real npm still works after the global sandboxed install.
+            const realPath = process.env.PATH;
+            execFileSync('npm', ['install', '--package-lock-only'], {
+                cwd: projectDir,
+                env: { ...process.env, PATH: realPath },
+                stdio: 'pipe',
+            });
+
+            // 5. Verify the package was resolved (lockfile exists).
+            const lockPath = path.join(projectDir, 'package-lock.json');
+            const lockStat = await fsp.stat(lockPath);
+            assert.ok(lockStat.isFile(), 'package-lock.json should exist after local install');
+
+            // 6. Verify the globally installed binary is still functional.
+            const globalBin = path.join(prefix, 'bin', TEST_PKG);
+            await fsp.stat(globalBin);
+            const output = execFileSync(TEST_PKG, ['--version'], {
+                encoding: 'utf8',
+                stdio: 'pipe',
+            });
+            assert.ok(
+                output.trim().length > 0,
+                `${TEST_PKG} should still work after local install`,
+            );
+        } finally {
+            try {
+                execFileSync('npm', ['uninstall', '-g', TEST_PKG], { stdio: 'pipe' });
+            } catch {
+                // ignore cleanup errors
+            }
+            await fsp.rm(testRoot, { recursive: true, force: true });
+        }
+    },
+);
