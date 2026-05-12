@@ -3,3 +3,9 @@ dist
 .git
 .claude
 .husky
+site/node_modules
+.agents
+.pnpm-store
+site/node_modules
+.agents
+.pnpm-store

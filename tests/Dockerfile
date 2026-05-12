@@ -19,14 +19,18 @@ RUN npm install -g pnpm bun --force
 
 WORKDIR /safenpm
 
+# Root dependencies (cached separately from source changes)
 COPY package.json pnpm-lock.yaml ./
-# Build-time install: skip all scripts (husky, esbuild native) — esbuild's
-# binary isn't needed since we're bundling JS, and there's no .git for husky.
 RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
+# Copy remaining source
 COPY . .
-# Build the safenpm bundles (esbuild bundles JS → no native binary needed)
+
+# Build the safenpm bundles
 RUN pnpm build
 
-ENTRYPOINT ["/bin/sh", "-c"]
-CMD ["pnpm run test"]
+# Install site dependencies (Astro, Tailwind)
+RUN cd site && pnpm install --no-frozen-lockfile --ignore-scripts
+
+# Run root tests then site tests
+CMD ["sh", "-c", "pnpm run test && cd site && pnpm test"]
