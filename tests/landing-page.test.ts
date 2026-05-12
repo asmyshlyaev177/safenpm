@@ -2,6 +2,7 @@
 
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
+import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -12,8 +13,8 @@ const SITE_DIR = path.join(REPO_ROOT, 'site');
 const DIST_DIR = path.join(SITE_DIR, 'dist');
 const INDEX_HTML = path.join(DIST_DIR, 'index.html');
 
-test('landing page builds and contains expected sections', async () => {
-    await execFileSync('npm', ['run', 'build'], {
+test('landing page builds and contains expected sections', () => {
+    execFileSync('npm', ['run', 'build'], {
         cwd: SITE_DIR,
         env: { ...process.env, SAFENPM_BYPASS: '1' },
         encoding: 'utf8',
@@ -21,7 +22,7 @@ test('landing page builds and contains expected sections', async () => {
         stdio: 'pipe',
     });
 
-    const html = await fsp.readFile(INDEX_HTML, 'utf8');
+    const html = fs.readFileSync(INDEX_HTML, 'utf8');
 
     assert.match(html, /Install packages/);
     assert.match(html, /Not threats/);

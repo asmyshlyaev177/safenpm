@@ -23,6 +23,8 @@ export default tseslint.config(
             'tests/comprehensive-*.test.ts',
             '.husky/_/',
             '.claude/',
+            '.agents/',
+            'site/.astro/',
             'eslint.config.js',
             'scripts/build.mjs',
             'scripts/init.cjs',
@@ -55,7 +57,6 @@ export default tseslint.config(
                 },
             ],
             'no-empty': ['error', { allowEmptyCatch: true }],
-            "prettier/prettier": "warn"
         },
     },
     {
@@ -65,7 +66,6 @@ export default tseslint.config(
         rules: {
             '@typescript-eslint/no-floating-promises': 'off',
             '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-            "prettier/prettier": "warn"
         },
     },
 
@@ -91,4 +91,9 @@ export default tseslint.config(
     // Prettier must come last so its disables override anything above and
     // its plugin rule applies to every file type matched above.
     prettierRecommended,
+    {
+        rules: {
+            'prettier/prettier': 'warn',
+        },
+    },
 );

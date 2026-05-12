@@ -3,8 +3,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { SITE_URL } from './src/constants';
 
 export default defineConfig({
-  site: SITE_URL,
-  vite: {
-    plugins: [tailwindcss()],
-  },
+    site: SITE_URL,
+    vite: {
+        plugins: [tailwindcss()],
+    },
 });
