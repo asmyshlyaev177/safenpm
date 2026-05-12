@@ -1,0 +1,7 @@
+node_modules/
+pnpm-lock.yaml
+tests/fixtures/
+.husky/_/
+
+# Shell scripts use shfmt, not prettier.
+*.sh

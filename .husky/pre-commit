@@ -1,0 +1,4 @@
+# 1. lint-staged: format + lint staged files, restage any auto-fixes
+# 2. typecheck the whole project (cheap, catches type errors before they land)
+pnpm exec lint-staged
+pnpm exec tsc --noEmit
