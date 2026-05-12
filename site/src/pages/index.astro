@@ -1,160 +1,456 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import { SITE_URL } from "../constants";
 ---
 
-<Layout title="safenpm — sandbox your package installs" description="Run npm/pnpm/yarn/bun install with bwrap sandboxing to keep secrets out of reach of postinstall scripts.">
-  <header class="border-b border-zinc-800">
-    <nav class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-      <span class="text-lg font-bold tracking-tight">safenpm</span>
-      <a
-        href="https://github.com/asmyshlyaev177/safenpm"
-        class="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium transition hover:bg-zinc-700"
+<Layout
+  title="safenpm: sandbox npm install from supply-chain worms"
+  description="Sandbox npm, pnpm, yarn, and bun installs with bwrap. Keep SSH keys, cloud credentials, and .env files hidden from malicious postinstall scripts. No config."
+>
+  <div class="stripe-bg min-h-screen">
+    <!-- Header -->
+    <header
+      class="border-b border-border"
+    >
+      <nav class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <a href="/" class="flex items-center gap-2.5">
+          <span
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-base"
+          >
+            S
+          </span>
+          <span class="text-lg font-semibold tracking-tight text-body">safenpm</span>
+        </a>
+        <div class="flex items-center gap-4">
+          <a
+            href="https://github.com/asmyshlyaev177/safenpm"
+            class="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-body transition hover:border-border-strong hover:bg-elevated"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+              />
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <section
+        class="relative overflow-hidden border-b border-border"
       >
-        GitHub
-      </a>
-    </nav>
-  </header>
-
-  <main>
-    <!-- Hero -->
-    <section class="mx-auto max-w-4xl px-4 pt-24 pb-16 text-center">
-      <h1 class="text-5xl font-bold tracking-tight sm:text-6xl">
-        Install packages.
-        <span class="text-blue-500">Not threats.</span>
-      </h1>
-      <p class="mx-auto mt-6 max-w-2xl text-lg text-zinc-400">
-        safenpm runs <code class="rounded bg-zinc-800 px-1.5 py-0.5 text-sm text-zinc-300">npm install</code>,
-        <code class="rounded bg-zinc-800 px-1.5 py-0.5 text-sm text-zinc-300">pnpm add</code>, and friends inside a
-        lightweight <strong class="text-zinc-200">bwrap</strong> sandbox &mdash; so your SSH keys,
-        cloud credentials, and <code class="rounded bg-zinc-800 px-1.5 py-0.5 text-sm text-zinc-300">.env</code>
-        files stay yours.
-      </p>
-      <div class="mt-10 flex items-center justify-center gap-4">
-        <a
-          href="#install"
-          class="rounded-lg bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500"
+        <div
+          class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.65_0.18_50_/_0.08),_transparent_70%)]"
+        />
+        <div
+          class="mx-auto max-w-6xl px-6 pt-28 pb-24 text-center"
         >
-          Get started
-        </a>
-        <a
-        href="https://github.com/asmyshlyaev177/safenpm"
-          class="rounded-lg border border-zinc-700 px-6 py-3 font-semibold transition hover:bg-zinc-800"
+          <div class="mb-8 flex items-center justify-center gap-2">
+            <span class="badge badge-warning">Beta</span>
+            <span class="text-sm text-muted">v0.1.0 &middot; Linux &amp; macOS</span>
+          </div>
+
+          <h1
+            class="mx-auto max-w-4xl text-5xl font-extrabold leading-[1.08] tracking-tight sm:text-6xl md:text-7xl"
+          >
+            Install packages.
+            <br />
+            <span class="text-accent">Not threats.</span>
+          </h1>
+
+          <p
+            class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted"
+          >
+            safenpm runs <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">npm install</code>,
+            <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">pnpm add</code>, and friends
+            inside a lightweight
+            <strong class="text-body">bwrap sandbox</strong>. Your SSH keys, cloud credentials, and
+            <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">.env</code> files stay yours. No
+            allowlists. No daemon. No config.
+          </p>
+
+          <div class="mt-10 flex items-center justify-center gap-4">
+            <a
+              href="#install"
+              class="glow-ring inline-flex items-center gap-2 rounded-lg bg-accent px-7 py-3.5 text-sm font-bold text-base uppercase tracking-wider transition hover:bg-accent-hover"
+            >
+              Get started
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </a>
+            <a
+              href="https://github.com/asmyshlyaev177/safenpm#readme"
+              class="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-7 py-3.5 text-sm font-semibold text-body transition hover:border-border-strong hover:bg-elevated"
+            >
+              Read the docs
+            </a>
+          </div>
+
+          <div
+            class="mt-14 inline-flex items-center gap-2 rounded-full border border-border bg-surface/50 px-5 py-2"
+          >
+            <span class="flex h-2 w-2 rounded-full bg-success"></span>
+            <span class="text-xs text-muted">No <code class="font-mono text-xs text-body">sudo</code> required &middot; One-line install &middot; Open source (MIT)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem: The supply-chain threat -->
+      <section class="border-b border-border">
+        <div class="mx-auto max-w-6xl px-6 py-24">
+          <div
+            class="relative rounded-2xl border border-danger-border bg-danger-subtle p-8 md:p-12"
+          >
+            <div
+              class="pointer-events-none absolute inset-0 rounded-2xl stripe-bg opacity-50"
+            />
+            <div class="relative">
+              <span class="badge badge-danger mb-4">Live threat</span>
+              <h2 class="text-3xl font-bold tracking-tight text-danger md:text-4xl">
+                The TanStack supply-chain worm
+              </h2>
+              <p class="mt-4 max-w-3xl text-base leading-relaxed text-body">
+                In May 2026, a worm compromised 84 npm packages with valid SLSA Build Level 3 provenance.
+                Postinstall scripts exfiltrated CI/CD secrets, SSH keys, cloud credentials, and crypto wallets.
+                It spread undetected because it looked legitimate.
+              </p>
+              <p class="mt-3 max-w-3xl text-base leading-relaxed text-body">
+                safenpm stops this class of attack at the OS level. Postinstall scripts run in a sandbox where
+                your secrets simply do not exist.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="border-b border-border" id="how-it-works">
+        <div class="mx-auto max-w-6xl px-6 py-24">
+          <div class="text-center">
+            <span class="badge badge-sandbox mb-4">How it works</span>
+            <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
+              Three layers of protection
+            </h2>
+            <p class="mt-3 text-muted">
+              From shell shim to kernel sandbox, nothing changes in your workflow.
+            </p>
+          </div>
+
+          <div
+            class="mt-16 grid gap-6 md:grid-cols-3"
+          >
+            <!-- Step 1 -->
+            <div class="terminal-card relative flex flex-col">
+              <span
+                class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle font-mono text-lg font-bold text-accent"
+              >
+                01
+              </span>
+              <h3 class="mt-5 text-lg font-bold">Global shims</h3>
+              <p class="mt-2 flex-1 text-sm leading-relaxed text-muted">
+                The one-line installer puts lightweight shims on your PATH. No aliases, no wrappers to remember.
+                When you run <code class="font-mono text-xs">npm install</code>, safenpm intercepts it automatically.
+              </p>
+            </div>
+
+            <!-- Arrow connector (desktop) -->
+            <div class="hidden items-center justify-center md:flex">
+              <svg class="h-6 w-6 text-border-strong" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="terminal-card relative flex flex-col">
+              <span
+                class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle font-mono text-lg font-bold text-accent"
+              >
+                02
+              </span>
+              <h3 class="mt-5 text-lg font-bold">bwrap sandbox</h3>
+              <p class="mt-2 flex-1 text-sm leading-relaxed text-muted">
+                The install runs inside a Bubblewrap container. Secrets in
+                <code class="font-mono text-xs">~/.ssh</code>, <code class="font-mono text-xs">~/.aws</code>,
+                and your environment variables are invisible to postinstall scripts.
+              </p>
+            </div>
+
+            <!-- Arrow connector (desktop) -->
+            <div class="hidden items-center justify-center md:flex">
+              <svg class="h-6 w-6 text-border-strong" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="right" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="terminal-card relative flex flex-col">
+              <span
+                class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-subtle font-mono text-lg font-bold text-accent"
+              >
+                03
+              </span>
+              <h3 class="mt-5 text-lg font-bold">Zero config</h3>
+              <p class="mt-2 flex-1 text-sm leading-relaxed text-muted">
+                Non-install commands pass through unchanged. No allowlists, no policy files, no daemon.
+                Just sandboxed package management that works out of the box.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Package managers -->
+      <section class="border-b border-border">
+        <div class="mx-auto max-w-6xl px-6 py-24">
+          <div class="text-center">
+            <span class="badge badge-sandbox mb-4">Compatible</span>
+            <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
+              Works with every major package manager
+            </h2>
+            <p class="mt-3 text-muted">
+              Your existing commands. Same flags. Same output. Just sandboxed.
+            </p>
+          </div>
+
+          <div class="mt-12 grid gap-4 sm:grid-cols-2">
+            <div class="terminal-card">
+              <div class="flex items-center gap-3">
+                <span
+                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-elevated font-mono text-sm font-bold text-accent"
+                >
+                  n
+                </span>
+                <span class="font-bold">npm</span>
+              </div>
+              <pre
+                class="mt-4 overflow-x-auto rounded-lg bg-base p-4 text-sm leading-relaxed"
+              ><code class="font-mono text-success">$ <span class="text-body">npm install</span> express</code></pre>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-3">
+                <span
+                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-elevated font-mono text-sm font-bold text-sandbox"
+                >
+                  p
+                </span>
+                <span class="font-bold">pnpm</span>
+              </div>
+              <pre
+                class="mt-4 overflow-x-auto rounded-lg bg-base p-4 text-sm leading-relaxed"
+              ><code class="font-mono text-success">$ <span class="text-body">pnpm add</span> zod</code></pre>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-3">
+                <span
+                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-elevated font-mono text-sm font-bold text-sandbox"
+                >
+                  y
+                </span>
+                <span class="font-bold">yarn</span>
+              </div>
+              <pre
+                class="mt-4 overflow-x-auto rounded-lg bg-base p-4 text-sm leading-relaxed"
+              ><code class="font-mono text-success">$ <span class="text-body">yarn add</span> react</code></pre>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-3">
+                <span
+                  class="flex h-9 w-9 items-center justify-center rounded-lg bg-elevated font-mono text-sm font-bold text-accent"
+                >
+                  b
+                </span>
+                <span class="font-bold">bun</span>
+              </div>
+              <pre
+                class="mt-4 overflow-x-auto rounded-lg bg-base p-4 text-sm leading-relaxed"
+              ><code class="font-mono text-success">$ <span class="text-body">bun add</span> @hono/hono</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Install -->
+      <section class="border-b border-border" id="install">
+        <div class="mx-auto max-w-6xl px-6 py-24">
+          <div class="text-center">
+            <span class="badge badge-warning mb-4">Install</span>
+            <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
+              One line. Any shell.
+            </h2>
+            <p class="mt-3 text-muted">
+              Works on Linux with bubblewrap and macOS with Docker.
+            </p>
+          </div>
+
+          <div class="terminal-card group mx-auto mt-10 max-w-2xl">
+            <div class="flex items-center gap-2 border-b border-border pb-3">
+              <span class="flex h-3 w-3 rounded-full border border-danger/40"></span>
+              <span class="flex h-3 w-3 rounded-full border border-accent/40"></span>
+              <span class="flex h-3 w-3 rounded-full border border-sandbox/40"></span>
+              <span class="ml-2 text-xs text-muted">terminal</span>
+            </div>
+            <button
+              id="copy-btn"
+              class="absolute right-3 top-3 rounded-md border border-border bg-elevated px-2.5 py-1 text-xs text-muted opacity-0 transition hover:text-body group-hover:opacity-100"
+              onclick="navigator.clipboard.writeText('curl -fsSL {SITE_URL}/install.sh | sh'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 1500)"
+            >
+              Copy
+            </button>
+            <pre
+              class="group relative mt-4 overflow-x-auto"
+            ><code class="font-mono text-sm leading-relaxed"><span class="text-success">$</span> <span class="text-body">curl -fsSL {SITE_URL}/install.sh</span> | sh</code></pre>
+          </div>
+
+          <p class="mx-auto mt-6 max-w-xl text-center text-sm text-dim">
+            Requires <code class="rounded bg-surface px-1 font-mono text-xs text-body">bubblewrap</code> on Linux
+            or <code class="rounded bg-surface px-1 font-mono text-xs text-body">Docker</code> on macOS.
+            The installer detects your OS and handles setup automatically.
+          </p>
+        </div>
+      </section>
+
+      <!-- What's protected -->
+      <section class="border-b border-border">
+        <div class="mx-auto max-w-6xl px-6 py-24">
+          <div class="text-center">
+            <span class="badge badge-danger mb-4">Protected</span>
+            <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
+              What safenpm hides
+            </h2>
+            <p class="mt-3 text-muted">
+              Every install runs in a clean room. These never reach postinstall scripts.
+            </p>
+          </div>
+
+          <div class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="terminal-card">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">&#128274;</span>
+                <span class="font-semibold">Credentials</span>
+              </div>
+              <ul class="mt-3 space-y-1 text-sm text-muted">
+                <li class="font-mono text-xs">.env, .env.*</li>
+                <li class="font-mono text-xs">.netrc, .pgpass</li>
+                <li class="font-mono text-xs">credentials, secrets</li>
+              </ul>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">&#128481;</span>
+                <span class="font-semibold">SSH &amp; TLS keys</span>
+              </div>
+              <ul class="mt-3 space-y-1 text-sm text-muted">
+                <li class="font-mono text-xs">id_rsa*, id_ed25519*</li>
+                <li class="font-mono text-xs">*.pem, *.key, *.crt</li>
+                <li class="font-mono text-xs">known_hosts</li>
+              </ul>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">&#9729;</span>
+                <span class="font-semibold">Cloud config</span>
+              </div>
+              <ul class="mt-3 space-y-1 text-sm text-muted">
+                <li class="font-mono text-xs">~/.aws, ~/.azure</li>
+                <li class="font-mono text-xs">service-account*.json</li>
+                <li class="font-mono text-xs">gcloud-*.json</li>
+              </ul>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">&#9881;</span>
+                <span class="font-semibold">Environment vars</span>
+              </div>
+              <ul class="mt-3 space-y-1 text-sm text-muted">
+                <li class="font-mono text-xs">*TOKEN*, *SECRET*</li>
+                <li class="font-mono text-xs">*API_KEY*, *PASSWORD*</li>
+                <li class="font-mono text-xs">AWS_, GITHUB_, NPM_</li>
+              </ul>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">&#128196;</span>
+                <span class="font-semibold">Certificates</span>
+              </div>
+              <ul class="mt-3 space-y-1 text-sm text-muted">
+                <li class="font-mono text-xs">*.pfx, *.p12, *.jks</li>
+                <li class="font-mono text-xs">*.gpg, *.asc</li>
+                <li class="font-mono text-xs">*.cer, *.keystore</li>
+              </ul>
+            </div>
+
+            <div class="terminal-card">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">&#128737;</span>
+                <span class="font-semibold">Entire $HOME</span>
+              </div>
+              <ul class="mt-3 space-y-1 text-sm text-muted">
+                <li class="font-mono text-xs">Replaced with tmpfs</li>
+                <li class="font-mono text-xs">~/.ssh, ~/.gnupg hidden</li>
+                <li class="text-xs text-muted">
+                  <em>Except ~/.npmrc, ~/.yarnrc</em>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="mt-10 text-center text-sm text-dim">
+            <code class="rounded bg-surface px-1 font-mono text-xs text-body">~/.npmrc</code> and
+            <code class="rounded bg-surface px-1 font-mono text-xs text-body">~/.yarnrc</code> are mounted
+            read-only so private registry auth still works. Everything else in
+            <code class="rounded bg-surface px-1 font-mono text-xs text-body">$HOME</code> is invisible.
+          </p>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="px-6 py-10">
+        <div
+          class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center sm:flex-row"
         >
-          View on GitHub &rarr;
-        </a>
-      </div>
-    </section>
-
-    <!-- Motivation -->
-    <section class="mx-auto max-w-4xl px-4 py-16">
-      <div class="rounded-xl border border-red-900/40 bg-red-950/20 p-8">
-        <h2 class="text-2xl font-bold text-red-400">Why safenpm?</h2>
-        <p class="mt-3 text-zinc-300 leading-relaxed">
-          In May&nbsp;2026 the <strong>TanStack supply-chain worm</strong> compromised 84 npm packages.
-          Postinstall scripts exfiltrated CI/CD secrets, SSH keys, cloud credentials, and crypto wallets,
-          and installed persistence hooks. The worm spread with valid SLSA Build&nbsp;Level&nbsp;3
-          provenance, making it nearly indistinguishable from legitimate releases.
-        </p>
-        <p class="mt-3 text-zinc-300 leading-relaxed">
-          safenpm prevents this class of attack at the OS level &mdash; <strong>without</strong> requiring
-          a per-package allowlist, without modifying your workflow, and with zero config in most cases.
-        </p>
-      </div>
-    </section>
-
-    <!-- How it works -->
-    <section class="mx-auto max-w-4xl px-4 py-16">
-      <h2 class="text-3xl font-bold text-center">How it works</h2>
-      <div class="mt-10 grid gap-8 sm:grid-cols-3">
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold">
-            1
-          </div>
-          <h3 class="mt-4 font-semibold text-lg">Global shims</h3>
-          <p class="mt-2 text-sm text-zinc-400 leading-relaxed">
-            One-line install puts lightweight shims on your PATH. When you run
-            <code class="rounded bg-zinc-800 px-1 text-xs">npm install</code>,
-            safenpm intercepts it automatically.
+          <p class="text-sm text-dim">
+            safenpm -- MIT license
           </p>
-        </div>
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold">
-            2
+          <div class="flex items-center gap-6 text-sm text-dim">
+            <a
+              href="https://github.com/asmyshlyaev177/safenpm"
+              class="transition hover:text-body"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://github.com/asmyshlyaev177/safenpm/issues"
+              class="transition hover:text-body"
+            >
+              Issues
+            </a>
+            <a
+              href="https://github.com/asmyshlyaev177/safenpm?tab=readme-ov-file#contributing"
+              class="transition hover:text-body"
+            >
+              Contribute
+            </a>
+            <span class="text-dim/50">|</span>
+            <a
+              href="https://github.com/asmyshlyaev177"
+              class="transition hover:text-body"
+            >
+              @asmyshlyaev177
+            </a>
           </div>
-          <h3 class="mt-4 font-semibold text-lg">bwrap sandbox</h3>
-          <p class="mt-2 text-sm text-zinc-400 leading-relaxed">
-            The install runs in a Bubblewrap container. Secrets in
-            <code class="rounded bg-zinc-800 px-1 text-xs">~/.ssh</code>,
-            <code class="rounded bg-zinc-800 px-1 text-xs">~/.aws</code>, and your environment are
-            invisible to postinstall scripts.
-          </p>
         </div>
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-lg font-bold">
-            3
-          </div>
-          <h3 class="mt-4 font-semibold text-lg">Zero config</h3>
-          <p class="mt-2 text-sm text-zinc-400 leading-relaxed">
-            Non-install commands pass through unchanged. No allowlists, no policy files, no daemon.
-            Just sandboxed package management.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Install -->
-    <section id="install" class="mx-auto max-w-4xl px-4 py-16">
-      <h2 class="text-3xl font-bold text-center">Install in one line</h2>
-      <div class="mt-8 rounded-xl border border-zinc-800 bg-zinc-900 p-6">
-        <code class="block text-sm text-green-400 leading-relaxed">
-          curl -fsSL https://safenpm.dev/install.sh | sh
-        </code>
-      </div>
-      <p class="mt-4 text-center text-sm text-zinc-500">
-        Requires Linux with <code class="rounded bg-zinc-800 px-1 text-xs">bubblewrap</code>
-        &nbsp;(<code class="rounded bg-zinc-800 px-1 text-xs">bwrap</code>) installed.
-        macOS support via Docker.
-      </p>
-    </section>
-
-    <!-- Commands -->
-    <section class="mx-auto max-w-4xl px-4 py-16">
-      <h2 class="text-3xl font-bold text-center">Then use your package manager as usual</h2>
-      <div class="mt-8 grid gap-6 sm:grid-cols-2">
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <h3 class="font-semibold text-lg">npm</h3>
-          <code class="mt-3 block rounded-lg bg-zinc-950 p-4 text-sm text-zinc-300">
-            npm install express
-          </code>
-        </div>
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <h3 class="font-semibold text-lg">pnpm</h3>
-          <code class="mt-3 block rounded-lg bg-zinc-950 p-4 text-sm text-zinc-300">
-            pnpm add zod
-          </code>
-        </div>
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <h3 class="font-semibold text-lg">yarn</h3>
-          <code class="mt-3 block rounded-lg bg-zinc-950 p-4 text-sm text-zinc-300">
-            yarn add react
-          </code>
-        </div>
-        <div class="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <h3 class="font-semibold text-lg">bun</h3>
-          <code class="mt-3 block rounded-lg bg-zinc-950 p-4 text-sm text-zinc-300">
-            bun add @hono/hono
-          </code>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="border-t border-zinc-800 px-4 py-8">
-      <p class="text-center text-sm text-zinc-500">
-        safenpm &mdash; MIT license. Built by
-        <a href="https://github.com/asmyshlyaev177" class="underline hover:text-zinc-300">asmyshlyaev177</a>.
-          <a href="https://asmyshlyaev177.dev" class="underline hover:text-zinc-300">asmyshlyaev177.dev</a>
-      </p>
-    </footer>
-  </main>
+      </footer>
+    </main>
+  </div>
 </Layout>

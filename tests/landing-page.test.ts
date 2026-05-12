@@ -27,10 +27,10 @@ test('landing page builds and contains expected sections', async () => {
     assert.match(html, /Not threats/);
     assert.match(html, /TanStack supply-chain worm/);
     assert.match(html, /bwrap sandbox/);
-    assert.match(html, /npm install express/);
-    assert.match(html, /pnpm add zod/);
-    assert.match(html, /yarn add react/);
-    assert.match(html, /bun add @hono\/hono/);
+    assert.match(html, /npm install.*express/);
+    assert.match(html, /pnpm add.*zod/);
+    assert.match(html, /yarn add.*react/);
+    assert.match(html, /bun add.*@hono\/hono/);
     assert.match(html, /curl -fsSL https:\/\/safenpm.dev\/install.sh/);
     assert.match(html, /MIT license/);
 });
