@@ -24,7 +24,7 @@ export default tseslint.config(
             '.husky/_/',
             '.claude/',
             '.agents/',
-            'site/.astro/',
+            'site/',
             'eslint.config.js',
             'scripts/build.mjs',
             'scripts/init.cjs',
