@@ -1,4 +1,4 @@
-# safenpm
+# ringfence
 
 Transparent sandbox around `npm install` (and `pnpm`, `yarn`, `bun`) so a
 malicious postinstall script can't read your `.env`, SSH keys, or cloud
@@ -46,17 +46,17 @@ node -v          # should print v20.x.y or higher
 ### 3a. Install from npm (recommended)
 
 ```sh
-npm i -g safenpm
-safenpm-setup     # runs the installer (bwrap + shims + rc edit)
+npm i -g ringfence
+ringfence-setup     # runs the installer (bwrap + shims + rc edit)
 ```
 
 ### 3b. Or install from a repo clone
 
 ```sh
-git clone https://github.com/<your-fork>/safenpm.git
-cd safenpm
+git clone https://github.com/<your-fork>/ringfence.git
+cd ringfence
 pnpm install
-pnpm build        # produces dist/safenpm.cjs
+pnpm build        # produces dist/ringfence.cjs
 ./install.sh
 ```
 
@@ -65,24 +65,24 @@ The installer:
 1. verifies Node ≥ 24,
 2. installs `bubblewrap` via your system package manager (`apt`, `dnf`,
    `pacman`, `zypper`, or `apk`) — uses `sudo` and prompts if needed,
-3. creates `~/.safenpm/{bin,lib}` and copies the `.ts` sources there,
-4. drops bash shims for `npm`, `pnpm`, `yarn`, `bun` into `~/.safenpm/bin`,
+3. creates `~/.ringfence/{bin,lib}` and copies the `.ts` sources there,
+4. drops bash shims for `npm`, `pnpm`, `yarn`, `bun` into `~/.ringfence/bin`,
 5. prepends that directory to `PATH` in `~/.bashrc`, `~/.zshrc`, `~/.profile`.
 
 ### 4. Activate the shim in your current shell
 
 ```sh
 exec $SHELL -l    # or simply open a new terminal
-which npm         # should print /home/<you>/.safenpm/bin/npm
+which npm         # should print /home/<you>/.ringfence/bin/npm
 ```
 
 ### 5. Verify it works
 
 ```sh
-mkdir /tmp/safenpm-check && cd /tmp/safenpm-check
+mkdir /tmp/ringfence-check && cd /tmp/ringfence-check
 echo 'SECRET=hunter2' > .env
 echo '{"name":"t","version":"1.0.0"}' > package.json
-npm install       # should print [safenpm] masking secret: .env
+npm install       # should print [ringfence] masking secret: .env
 cat .env          # still readable on the host — sandbox only hid it from npm
 ```
 
@@ -115,21 +115,21 @@ Download from <https://docs.docker.com/desktop/install/mac-install/>, install,
 launch it, and wait until the whale icon shows "running" in the menu bar.
 
 ```sh
-docker info     # must succeed before running safenpm installs
+docker info     # must succeed before running ringfence installs
 ```
 
-### 4. Install safenpm
+### 4. Install ringfence
 
 ```sh
-npm i -g safenpm
-safenpm-setup
+npm i -g ringfence
+ringfence-setup
 exec $SHELL -l
 ```
 
 The setup skips the bubblewrap step on macOS and verifies Docker is
 reachable instead. The rest is identical to Linux.
 
-## Using safenpm
+## Using ringfence
 
 After install, just use `npm`, `pnpm`, `yarn`, or `bun` as you normally
 would — no new command to learn. Install-like subcommands route through the
@@ -174,7 +174,7 @@ tokens for private registries still work. Everything else in `$HOME`
 ## Project layout
 
 ```text
-bin/safenpm.ts         dispatcher entry point
+bin/ringfence.ts         dispatcher entry point
 lib/pm.ts              package-manager metadata + install-like detection
 lib/detect.ts          secret-file and secret-env enumeration
 lib/sandbox-linux.ts   builds bwrap argv and execs
@@ -182,9 +182,9 @@ lib/sandbox-macos.ts   stages workdir, runs Docker container, syncs back
 lib/log.ts             colored stderr helpers
 lib/rcedit.sh          shell-rc edit helpers (sourced by install/uninstall)
 scripts/build.mjs      esbuild bundler config
-install.sh             one-shot bash installer (npm bin: safenpm-setup)
+install.sh             one-shot bash installer (npm bin: ringfence-setup)
 uninstall.sh
-dist/safenpm.cjs       bundled dispatcher (generated, gitignored, shipped)
+dist/ringfence.cjs       bundled dispatcher (generated, gitignored, shipped)
 ```
 
 The wrapper is written in TypeScript and bundled to a single self-contained
@@ -202,7 +202,7 @@ Then:
 
 ```sh
 pnpm install        # installs deps and activates the husky pre-commit hook
-pnpm build          # bundle bin/safenpm.ts → dist/safenpm.cjs via esbuild
+pnpm build          # bundle bin/ringfence.ts → dist/ringfence.cjs via esbuild
 pnpm test           # node:test suite (10 cases covering rc-file editing)
 pnpm typecheck      # tsc --noEmit
 pnpm check          # eslint (read-only): fails if anything needs fixing
@@ -231,7 +231,7 @@ properties) so Node's native type stripping keeps working without
 ## Uninstall
 
 ```sh
-~/.safenpm/uninstall.sh
+~/.ringfence/uninstall.sh
 ```
 
 ## Limitations

@@ -7,12 +7,12 @@ const path = require('node:path');
 const TEMPLATE = path.resolve(__dirname, 'bootstrap-template.cjs');
 const PROJECT_ROOT = process.cwd();
 const TARGET_DIR = path.join(PROJECT_ROOT, 'scripts');
-const TARGET = path.join(TARGET_DIR, 'safenpm-bootstrap.cjs');
+const TARGET = path.join(TARGET_DIR, 'ringfence-bootstrap.cjs');
 const PKG = path.join(PROJECT_ROOT, 'package.json');
-const HOOK_CMD = 'node scripts/safenpm-bootstrap.cjs';
+const HOOK_CMD = 'node scripts/ringfence-bootstrap.cjs';
 
-const log = (msg) => process.stdout.write(`[safenpm-init] ${msg}\n`);
-const warn = (msg) => process.stderr.write(`[safenpm-init] WARNING: ${msg}\n`);
+const log = (msg) => process.stdout.write(`[ringfence-init] ${msg}\n`);
+const warn = (msg) => process.stderr.write(`[ringfence-init] WARNING: ${msg}\n`);
 
 function detectPM() {
     const locks = [
@@ -34,12 +34,12 @@ function detectPM() {
 }
 
 if (!fs.existsSync(PKG)) {
-    process.stderr.write(`[safenpm-init] no package.json found in ${PROJECT_ROOT}\n`);
+    process.stderr.write(`[ringfence-init] no package.json found in ${PROJECT_ROOT}\n`);
     process.exit(1);
 }
 
 if (!fs.existsSync(TEMPLATE)) {
-    process.stderr.write(`[safenpm-init] missing bootstrap template at ${TEMPLATE}\n`);
+    process.stderr.write(`[ringfence-init] missing bootstrap template at ${TEMPLATE}\n`);
     process.exit(1);
 }
 
@@ -59,7 +59,7 @@ const pkg = JSON.parse(fs.readFileSync(PKG, 'utf8'));
 pkg.scripts ??= {};
 
 const existing = pkg.scripts.preinstall;
-if (existing && existing !== HOOK_CMD && !existing.includes('safenpm-bootstrap')) {
+if (existing && existing !== HOOK_CMD && !existing.includes('ringfence-bootstrap')) {
     warn(`existing preinstall script not modified:`);
     warn(`  ${existing}`);
     warn(`Manually chain it with: "${HOOK_CMD} && ${existing}"`);
@@ -72,9 +72,9 @@ if (existing && existing !== HOOK_CMD && !existing.includes('safenpm-bootstrap')
     log('added preinstall hook to package.json');
 }
 
-if (!pkg.devDependencies?.safenpm && !pkg.dependencies?.safenpm) {
-    warn('safenpm is not listed in {dev,}Dependencies.');
-    warn(`Run: ${pm} i -D safenpm`);
+if (!pkg.devDependencies?.ringfence && !pkg.dependencies?.ringfence) {
+    warn('ringfence is not listed in {dev,}Dependencies.');
+    warn(`Run: ${pm} i -D ringfence`);
 }
 
-log('done. Commit scripts/safenpm-bootstrap.cjs and package.json.');
+log('done. Commit scripts/ringfence-bootstrap.cjs and package.json.');

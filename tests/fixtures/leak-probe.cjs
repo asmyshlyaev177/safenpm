@@ -42,7 +42,7 @@ const results = {
     home_ssh_dir: tryListDir(path.join(home, '.ssh')),
     home_aws_dir: tryListDir(path.join(home, '.aws')),
     home_gnupg_dir: tryListDir(path.join(home, '.gnupg')),
-    host_planted_secret: tryReadFile(path.join(home, '.safenpm-host-sec-test')),
+    host_planted_secret: tryReadFile(path.join(home, '.ringfence-host-sec-test')),
 
     // Secret-shaped env vars — should all be unset inside the sandbox.
     env_aws: process.env.AWS_SECRET_ACCESS_KEY ?? null,
@@ -52,7 +52,7 @@ const results = {
     env_generic_secret: process.env.MY_API_SECRET ?? null,
 
     // Non-secret env vars — should pass through.
-    env_ci_flag: process.env.SAFENPM_TEST_HARMLESS ?? null,
+    env_ci_flag: process.env.RINGFENCE_TEST_HARMLESS ?? null,
 
     // Process / runtime sanity.
     cwd: process.cwd(),

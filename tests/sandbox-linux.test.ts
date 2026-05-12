@@ -29,7 +29,7 @@ function indexOfBind(argv: readonly string[], target: string): number {
 
 async function withTempWorkdir<T>(parent: string, fn: (workdir: string) => Promise<T>): Promise<T> {
     await fsp.mkdir(parent, { recursive: true });
-    const workdir = await fsp.mkdtemp(path.join(parent, 'safenpm-test-'));
+    const workdir = await fsp.mkdtemp(path.join(parent, 'ringfence-test-'));
     try {
         return await fn(workdir);
     } finally {
@@ -45,7 +45,7 @@ test('workdir bind comes AFTER --tmpfs $HOME (the bug that broke real installs)'
             realBin: '/usr/bin/node',
             workdir,
             args: ['install'],
-            safenpmHome: path.join(REPO_ROOT, '.safenpm-doesnt-matter'),
+            ringfenceHome: path.join(REPO_ROOT, '.ringfence-doesnt-matter'),
         });
 
         const tmpfsHomeIdx = indexOfTmpfs(args, home);
@@ -67,7 +67,7 @@ test('workdir bind comes AFTER --tmpfs /tmp (for projects living under /tmp)', a
             realBin: '/usr/bin/node',
             workdir,
             args: ['install'],
-            safenpmHome: '/anywhere',
+            ringfenceHome: '/anywhere',
         });
 
         const tmpfsTmpIdx = indexOfTmpfs(args, '/tmp');
@@ -93,7 +93,7 @@ test('--chdir target matches the workdir bind', async () => {
             realBin: '/usr/bin/node',
             workdir,
             args: ['install'],
-            safenpmHome: '/anywhere',
+            ringfenceHome: '/anywhere',
         });
         const chdirIdx = args.indexOf('--chdir');
         assert.notEqual(chdirIdx, -1, '--chdir must be present');
@@ -112,7 +112,7 @@ test('secret files inside workdir get masked with --ro-bind /dev/null', async ()
             realBin: '/usr/bin/node',
             workdir,
             args: ['install'],
-            safenpmHome: '/anywhere',
+            ringfenceHome: '/anywhere',
         });
 
         assert.equal(maskedSecrets.length, 2, 'should detect both secrets');
@@ -138,8 +138,8 @@ test('secret files inside workdir get masked with --ro-bind /dev/null', async ()
 test('PATH is rewritten to drop the shim dir inside the sandbox', async () => {
     const home = process.env.HOME!;
     await withTempWorkdir(home, async (workdir) => {
-        const safenpmHome = '/tmp/fake-safenpm';
-        const shimDir = path.join(safenpmHome, 'bin');
+        const ringfenceHome = '/tmp/fake-ringfence';
+        const shimDir = path.join(ringfenceHome, 'bin');
         const origPath = process.env.PATH;
         process.env.PATH = `${shimDir}:/usr/bin:/bin`;
         try {
@@ -148,7 +148,7 @@ test('PATH is rewritten to drop the shim dir inside the sandbox', async () => {
                 realBin: '/usr/bin/node',
                 workdir,
                 args: ['install'],
-                safenpmHome,
+                ringfenceHome,
             });
             // last `--setenv PATH <value>` wins
             let pathValue: string | undefined;

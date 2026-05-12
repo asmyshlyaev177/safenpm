@@ -1,8 +1,8 @@
 # shellcheck shell=bash
 # Shell-rc edit helpers, sourced by install.sh and uninstall.sh.
 #
-# A "managed line" is a line that ends with a marker comment (e.g. "# safenpm").
-# This is the only thing that distinguishes safenpm's PATH entry from any
+# A "managed line" is a line that ends with a marker comment (e.g. "# ringfence").
+# This is the only thing that distinguishes ringfence's PATH entry from any
 # other PATH manipulation the user may have in their rc file.
 #
 # Functions:

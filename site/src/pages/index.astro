@@ -4,7 +4,7 @@ import { SITE_URL } from "../constants";
 ---
 
 <Layout
-  title="safenpm: sandbox npm install from supply-chain worms"
+  title="ringfence: sandbox npm install from supply-chain worms"
   description="Sandbox npm, pnpm, yarn, and bun installs with bwrap. Keep SSH keys, cloud credentials, and .env files hidden from malicious postinstall scripts. No config."
 >
   <div class="stripe-bg min-h-screen">
@@ -19,11 +19,11 @@ import { SITE_URL } from "../constants";
           >
             S
           </span>
-          <span class="text-lg font-semibold tracking-tight text-body">safenpm</span>
+          <span class="text-lg font-semibold tracking-tight text-body">ringfence</span>
         </a>
         <div class="flex items-center gap-4">
           <a
-            href="https://github.com/asmyshlyaev177/safenpm"
+            href="https://github.com/asmyshlyaev177/ringfence"
             class="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-body transition hover:border-border-strong hover:bg-elevated"
           >
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -64,7 +64,7 @@ import { SITE_URL } from "../constants";
           <p
             class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted"
           >
-            safenpm runs <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">npm install</code>,
+            ringfence runs <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">npm install</code>,
             <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">pnpm add</code>, and friends
             inside a lightweight
             <strong class="text-body">bwrap sandbox</strong>. Your SSH keys, cloud credentials, and
@@ -83,7 +83,7 @@ import { SITE_URL } from "../constants";
               </svg>
             </a>
             <a
-              href="https://github.com/asmyshlyaev177/safenpm#readme"
+              href="https://github.com/asmyshlyaev177/ringfence#readme"
               class="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-7 py-3.5 text-sm font-semibold text-body transition hover:border-border-strong hover:bg-elevated"
             >
               Read the docs
@@ -119,7 +119,7 @@ import { SITE_URL } from "../constants";
                 It spread undetected because it looked legitimate.
               </p>
               <p class="mt-3 max-w-3xl text-base leading-relaxed text-body">
-                safenpm stops this class of attack at the OS level. Postinstall scripts run in a sandbox where
+                ringfence stops this class of attack at the OS level. Postinstall scripts run in a sandbox where
                 your secrets simply do not exist.
               </p>
             </div>
@@ -153,7 +153,7 @@ import { SITE_URL } from "../constants";
               <h3 class="mt-5 text-lg font-bold">Global shims</h3>
               <p class="mt-2 flex-1 text-sm leading-relaxed text-muted">
                 The one-line installer puts lightweight shims on your PATH. No aliases, no wrappers to remember.
-                When you run <code class="font-mono text-xs">npm install</code>, safenpm intercepts it automatically.
+                When you run <code class="font-mono text-xs">npm install</code>, ringfence intercepts it automatically.
               </p>
             </div>
 
@@ -322,7 +322,7 @@ import { SITE_URL } from "../constants";
           <div class="text-center">
             <span class="badge badge-danger mb-4">Protected</span>
             <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
-              What safenpm hides
+              What ringfence hides
             </h2>
             <p class="mt-3 text-muted">
               Every install runs in a clean room. These never reach postinstall scripts.
@@ -420,23 +420,23 @@ import { SITE_URL } from "../constants";
           class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center sm:flex-row"
         >
           <p class="text-sm text-dim">
-            safenpm -- MIT license
+            ringfence -- MIT license
           </p>
           <div class="flex items-center gap-6 text-sm text-dim">
             <a
-              href="https://github.com/asmyshlyaev177/safenpm"
+              href="https://github.com/asmyshlyaev177/ringfence"
               class="transition hover:text-body"
             >
               GitHub
             </a>
             <a
-              href="https://github.com/asmyshlyaev177/safenpm/issues"
+              href="https://github.com/asmyshlyaev177/ringfence/issues"
               class="transition hover:text-body"
             >
               Issues
             </a>
             <a
-              href="https://github.com/asmyshlyaev177/safenpm?tab=readme-ov-file#contributing"
+              href="https://github.com/asmyshlyaev177/ringfence?tab=readme-ov-file#contributing"
               class="transition hover:text-body"
             >
               Contribute

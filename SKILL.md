@@ -1,9 +1,9 @@
 ---
-name: safenpm
+name: ringfence
 description: A brief description of what this skill does
 ---
 
-# safenpm
+# ringfence
 
 Instructions for the agent to follow when this skill is activated.
 

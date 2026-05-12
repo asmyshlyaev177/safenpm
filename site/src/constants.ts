@@ -1,1 +1,1 @@
-export const SITE_URL = 'https://safenpm.dev';
+export const SITE_URL = 'https://ringfence.pages.dev';

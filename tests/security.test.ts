@@ -1,14 +1,14 @@
 // End-to-end security tests. These spin up a synthetic project with a
 // preinstall script that tries every leak path a malicious npm package
-// would attempt, run `npm install` through a freshly-built safenpm shim,
+// would attempt, run `npm install` through a freshly-built ringfence shim,
 // then assert that every probe failed (file blocked, env stripped).
 //
 // Test isolation:
 //   - A self-contained shim is built in a tempdir per test run; the user's
-//     ~/.safenpm install is not touched.
-//   - The bundle at dist/safenpm.mjs must exist (run `pnpm build` first).
+//     ~/.ringfence install is not touched.
+//   - The bundle at dist/ringfence.mjs must exist (run `pnpm build` first).
 //   - bwrap must be installed (Linux only — tests skip on macOS/Windows).
-//   - To verify host-blocking we plant a file at $HOME/.safenpm-host-secret-fixture
+//   - To verify host-blocking we plant a file at $HOME/.ringfence-host-secret-fixture
 //     before the install and remove it after.
 
 import { describe, test, before, after } from 'node:test';
@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const BUNDLE = path.join(REPO_ROOT, 'dist/safenpm.mjs');
+const BUNDLE = path.join(REPO_ROOT, 'dist/ringfence.mjs');
 const PROBE = path.join(REPO_ROOT, 'tests/fixtures/leak-probe.cjs');
 
 type Probe<T> = { ok: true; value: T } | { ok: false; code: string };
@@ -47,7 +47,7 @@ type Results = {
     home_entries: string[] | null;
 };
 
-const HOST_FIXTURE_PATH = path.join(process.env.HOME!, '.safenpm-host-sec-test');
+const HOST_FIXTURE_PATH = path.join(process.env.HOME!, '.ringfence-host-sec-test');
 const HOST_FIXTURE_CONTENT = 'IF-YOU-CAN-READ-THIS-THE-SANDBOX-LEAKED';
 
 function hasBwrap(): boolean {
@@ -85,18 +85,18 @@ describe('security: third-party install scripts cannot leak secrets', suiteOpts,
 
     before(async () => {
         // 1. Sandbox state: a fresh shim dir + bundle copy, isolated from the
-        //    user's installed ~/.safenpm.
-        testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm-sec-'));
-        const safenpmHome = path.join(testRoot, 'safenpm');
-        shimDir = path.join(safenpmHome, 'bin');
+        //    user's installed ~/.ringfence.
+        testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-sec-'));
+        const ringfenceHome = path.join(testRoot, 'ringfence');
+        shimDir = path.join(ringfenceHome, 'bin');
         await fsp.mkdir(shimDir, { recursive: true });
-        await fsp.copyFile(BUNDLE, path.join(shimDir, 'safenpm.mjs'));
-        await fsp.chmod(path.join(shimDir, 'safenpm.mjs'), 0o755);
+        await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
+        await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
         for (const pm of ['npm', 'pnpm', 'yarn', 'bun']) {
             const shim = path.join(shimDir, pm);
             await fsp.writeFile(
                 shim,
-                `#!/usr/bin/env bash\nexec "${shimDir}/safenpm.mjs" ${pm} "$@"\n`,
+                `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`,
             );
             await fsp.chmod(shim, 0o755);
         }
@@ -117,7 +117,7 @@ describe('security: third-party install scripts cannot leak secrets', suiteOpts,
             path.join(workdir, 'package.json'),
             JSON.stringify(
                 {
-                    name: 'safenpm-security-fixture',
+                    name: 'ringfence-security-fixture',
                     version: '0.0.0',
                     private: true,
                     scripts: { preinstall: 'node leak-probe.cjs' },
@@ -128,17 +128,17 @@ describe('security: third-party install scripts cannot leak secrets', suiteOpts,
         );
 
         // 4. Spawn npm install via the shim with planted secret env vars
-        //    and the SAFENPM_HOME override pointing at our fresh shim dir.
+        //    and the RINGFENCE_HOME override pointing at our fresh shim dir.
         const env = {
             ...process.env,
-            SAFENPM_HOME: safenpmHome,
+            RINGFENCE_HOME: ringfenceHome,
             PATH: `${shimDir}:${process.env.PATH}`,
             AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
             NPM_TOKEN: 'npm_planted_leak',
             GITHUB_TOKEN: 'ghp_planted_leak',
             DATABASE_PASSWORD: 'planted-db-leak',
             MY_API_SECRET: 'planted-generic-leak',
-            SAFENPM_TEST_HARMLESS: 'harmless-flag-passes-through',
+            RINGFENCE_TEST_HARMLESS: 'harmless-flag-passes-through',
         };
         execFileSync('npm', ['install'], { cwd: workdir, env, stdio: 'pipe' });
 
@@ -234,7 +234,7 @@ describe('security: third-party install scripts cannot leak secrets', suiteOpts,
         // sandbox's $HOME listing.
         const entries = results.home_entries ?? [];
         assert.ok(
-            !entries.includes('.safenpm-host-secret-fixture'),
+            !entries.includes('.ringfence-host-secret-fixture'),
             `LEAK: sandbox $HOME shows host fixture: ${entries.join(',')}`,
         );
         // ~/.ssh, ~/.aws, ~/.gnupg should also be absent (we only expose
@@ -283,7 +283,7 @@ describe('security: third-party install scripts cannot leak secrets', suiteOpts,
 
     // ----- Harmless env vars must still pass through -----
 
-    test('non-secret env vars (SAFENPM_TEST_HARMLESS) reach the install', () => {
+    test('non-secret env vars (RINGFENCE_TEST_HARMLESS) reach the install', () => {
         assert.equal(results.env_ci_flag, 'harmless-flag-passes-through');
     });
 

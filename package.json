@@ -1,5 +1,5 @@
 {
-  "name": "safenpm",
+  "name": "ringfence",
   "version": "0.1.0",
   "description": "Sandbox npm/pnpm/yarn/bun install with bwrap (Linux) or Docker (macOS) to keep secrets in the working directory and host $HOME out of reach of postinstall scripts.",
   "type": "module",
@@ -15,22 +15,22 @@
     ]
   },
   "bin": {
-    "safenpm-setup": "install.sh",
-    "safenpm-init": "scripts/init.cjs"
+    "ringfence-setup": "install.sh",
+    "ringfence-init": "scripts/init.cjs"
   },
-  "main": "dist/safenpm.cjs",
-  "module": "dist/safenpm.mjs",
+  "main": "dist/ringfence.cjs",
+  "module": "dist/ringfence.mjs",
   "exports": {
     ".": {
-      "import": "./dist/safenpm.mjs",
-      "require": "./dist/safenpm.cjs"
+      "import": "./dist/ringfence.mjs",
+      "require": "./dist/ringfence.cjs"
     }
   },
   "files": [
-    "dist/safenpm.mjs",
-    "dist/safenpm.mjs.map",
-    "dist/safenpm.cjs",
-    "dist/safenpm.cjs.map",
+    "dist/ringfence.mjs",
+    "dist/ringfence.mjs.map",
+    "dist/ringfence.cjs",
+    "dist/ringfence.cjs.map",
     "install.sh",
     "uninstall.sh",
     "lib/rcedit.sh",
@@ -42,8 +42,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepack": "node scripts/build.mjs",
-    "test": "if [ ! -f /.dockerenv ] && [ -z \"$CI\" ]; then echo 'ERROR: Tests modify host files under $HOME and MUST run inside Docker.'; echo '  Run: npm run test:docker'; echo '  Or: docker build -t safenpm-test -f tests/Dockerfile . && docker run --rm --privileged safenpm-test'; exit 1; fi && node --experimental-strip-types --test 'tests/**/*.test.ts'",
-    "test:docker": "docker build -t safenpm-test -f tests/Dockerfile . && docker run --rm --privileged safenpm-test",
+    "test": "if [ ! -f /.dockerenv ] && [ -z \"$CI\" ]; then echo 'ERROR: Tests modify host files under $HOME and MUST run inside Docker.'; echo '  Run: npm run test:docker'; echo '  Or: docker build -t ringfence-test -f tests/Dockerfile . && docker run --rm --privileged ringfence-test'; exit 1; fi && node --experimental-strip-types --test 'tests/**/*.test.ts'",
+    "test:docker": "docker build -t ringfence-test -f tests/Dockerfile . && docker run --rm --privileged ringfence-test",
     "typecheck": "tsc --noEmit",
     "check": "eslint .",
     "fix": "eslint . --fix",

@@ -1,5 +1,5 @@
 {
-  "name": "safenpm-site",
+  "name": "ringfence-site",
   "type": "module",
   "scripts": {
     "dev": "astro dev --port 4321",

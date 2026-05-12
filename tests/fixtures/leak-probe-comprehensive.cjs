@@ -56,7 +56,7 @@ const results = {
     home_bashrc: tryRead(path.join(home, '.bashrc')),
     home_zshrc: tryRead(path.join(home, '.zshrc')),
     home_profile: tryRead(path.join(home, '.profile')),
-    home_planted_secret: tryRead(path.join(home, '.safenpm-host-secret-fixture-' + (process.env.SAFENPM_TEST_PM || 'default'))),
+    home_planted_secret: tryRead(path.join(home, '.ringfence-host-secret-fixture-' + (process.env.RINGFENCE_TEST_PM || 'default'))),
 
     // ----- ~/.ssh directory (should be empty/ENOENT inside sandbox) -----
     home_ssh_dir: tryList(path.join(home, '.ssh')),
@@ -85,8 +85,8 @@ const results = {
     home_gcloud_creds: tryRead(path.join(home, '.config', 'gcloud', 'application_default_credentials.json')),
 
     // ----- /tmp isolation -----
-    tmp_planted: tryRead(path.join(osTmp, 'safenpm-test-tmp-secret')),
-    tmp_can_write: tryWrite(path.join(osTmp, 'safenpm-test-exfil'), 'stolen-data'),
+    tmp_planted: tryRead(path.join(osTmp, 'ringfence-test-tmp-secret')),
+    tmp_can_write: tryWrite(path.join(osTmp, 'ringfence-test-exfil'), 'stolen-data'),
 
     // ----- /proc / sys access (should be readable — system info, not secret) -----
     proc_version: tryRead('/proc/version'),
@@ -119,7 +119,7 @@ const results = {
     env_heroku_api: process.env.HEROKU_API_KEY ?? null,
 
     // ----- Non-secret env vars (should pass through) -----
-    env_harmless: process.env.SAFENPM_TEST_HARMLESS ?? null,
+    env_harmless: process.env.RINGFENCE_TEST_HARMLESS ?? null,
     env_path: process.env.PATH ? 'present' : null,
     env_user: process.env.USER ?? null,
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# safenpm installer.
+# ringfence installer.
 #
 # Sets up per-user shims that route install commands through a sandbox
 # (bwrap on Linux, Docker on macOS). The wrapper logic is TypeScript, run
 # directly by Node 24+ via native type stripping.
 set -euo pipefail
 
-SAFENPM_HOME="${SAFENPM_HOME:-$HOME/.safenpm}"
-SHIM_DIR="$SAFENPM_HOME/bin"
-LIB_DIR="$SAFENPM_HOME/lib"
+RINGFENCE_HOME="${RINGFENCE_HOME:-$HOME/.ringfence}"
+SHIM_DIR="$RINGFENCE_HOME/bin"
+LIB_DIR="$RINGFENCE_HOME/lib"
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -20,14 +20,14 @@ case "$OS" in
     Linux) PLATFORM=linux ;;
     Darwin) PLATFORM=macos ;;
     *)
-        echo "safenpm: unsupported OS: $OS (Linux/macOS only)" >&2
+        echo "ringfence: unsupported OS: $OS (Linux/macOS only)" >&2
         exit 1
         ;;
 esac
 
-log() { printf '\033[1;34m[safenpm]\033[0m %s\n' "$*"; }
-warn() { printf '\033[1;33m[safenpm]\033[0m %s\n' "$*" >&2; }
-err() { printf '\033[1;31m[safenpm]\033[0m %s\n' "$*" >&2; }
+log() { printf '\033[1;34m[ringfence]\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33m[ringfence]\033[0m %s\n' "$*" >&2; }
+err() { printf '\033[1;31m[ringfence]\033[0m %s\n' "$*" >&2; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
@@ -71,7 +71,7 @@ require_node_20() {
     v="$(node -v 2>/dev/null | sed 's/^v//')"
     major="${v%%.*}"
     if [ -z "$major" ] || [ "$major" -lt 20 ]; then
-        err "node $v is too old; safenpm needs >= 20."
+        err "node $v is too old; ringfence needs >= 20."
         print_node_setup_steps
         exit 1
     fi
@@ -153,9 +153,9 @@ EOF
     if ! docker info >/dev/null 2>&1; then
         warn "Docker is installed but the daemon isn't reachable."
         cat >&2 <<'EOF'
-[safenpm] Start Docker Desktop now and wait until 'docker info' succeeds.
-[safenpm] safenpm will continue installing, but installs will fail until
-[safenpm] the Docker daemon is running.
+[ringfence] Start Docker Desktop now and wait until 'docker info' succeeds.
+[ringfence] ringfence will continue installing, but installs will fail until
+[ringfence] the Docker daemon is running.
 EOF
     fi
 }
@@ -171,8 +171,8 @@ esac
 # (.cjs); we ship both so the package can be loaded either way. The shim
 # invokes the ESM bundle by default (matches the source style and Node 20+
 # ESM startup is on par with CJS).
-DIST_MJS="$SRC_DIR/dist/safenpm.mjs"
-DIST_CJS="$SRC_DIR/dist/safenpm.cjs"
+DIST_MJS="$SRC_DIR/dist/ringfence.mjs"
+DIST_CJS="$SRC_DIR/dist/ringfence.cjs"
 if [ ! -f "$DIST_MJS" ] || [ ! -f "$DIST_CJS" ]; then
     err "dispatcher bundles not found in $SRC_DIR/dist/"
     cat >&2 <<'EOF'
@@ -180,30 +180,30 @@ if [ ! -f "$DIST_MJS" ] || [ ! -f "$DIST_CJS" ]; then
 Build the dispatcher before running install.sh from a repo checkout:
 
   pnpm install
-  pnpm build       # produces dist/safenpm.{mjs,cjs}
+  pnpm build       # produces dist/ringfence.{mjs,cjs}
 
-If you installed via `npm i -g safenpm` and still hit this, please file
+If you installed via `npm i -g ringfence` and still hit this, please file
 a bug — dist/ should ship in the published tarball.
 EOF
     exit 1
 fi
 
-log "installing into $SAFENPM_HOME"
+log "installing into $RINGFENCE_HOME"
 mkdir -p "$SHIM_DIR" "$LIB_DIR"
 for ext in mjs cjs; do
-    install -m 0755 "$SRC_DIR/dist/safenpm.$ext" "$SHIM_DIR/safenpm.$ext"
-    if [ -f "$SRC_DIR/dist/safenpm.$ext.map" ]; then
-        install -m 0644 "$SRC_DIR/dist/safenpm.$ext.map" "$SHIM_DIR/safenpm.$ext.map"
+    install -m 0755 "$SRC_DIR/dist/ringfence.$ext" "$SHIM_DIR/ringfence.$ext"
+    if [ -f "$SRC_DIR/dist/ringfence.$ext.map" ]; then
+        install -m 0644 "$SRC_DIR/dist/ringfence.$ext.map" "$SHIM_DIR/ringfence.$ext.map"
     fi
 done
 install -m 0644 "$SRC_DIR/lib/rcedit.sh" "$LIB_DIR/rcedit.sh"
-install -m 0755 "$SRC_DIR/uninstall.sh" "$SAFENPM_HOME/uninstall.sh"
+install -m 0755 "$SRC_DIR/uninstall.sh" "$RINGFENCE_HOME/uninstall.sh"
 
 for pm in npm pnpm yarn bun; do
     cat >"$SHIM_DIR/$pm" <<'SHIMEOF'
 #!/usr/bin/env bash
-# safenpm shim — intercepts install commands and routes them through the
-# safenpm sandbox.  Delegates to the project-local safenpm when the current
+# ringfence shim — intercepts install commands and routes them through the
+# ringfence sandbox.  Delegates to the project-local ringfence when the current
 # working directory has it as a dependency; falls back to the global install.
 set -euo pipefail
 SHIMEOF
@@ -212,13 +212,13 @@ SHIMEOF
     cat >>"$SHIM_DIR/$pm" <<SHIMEOF
 SHIM_DIR="$SHIM_DIR"
 PM="$pm"
-DISPATCHER="\$SHIM_DIR/safenpm.mjs"
+DISPATCHER="\$SHIM_DIR/ringfence.mjs"
 SHIMEOF
     cat >>"$SHIM_DIR/$pm" <<'SHIMEOF'
-# Detect project-local safenpm (handles npm flat, pnpm nested, yarn PnP).
+# Detect project-local ringfence (handles npm flat, pnpm nested, yarn PnP).
 LOCAL="$(node -e "
 try {
-  var p = require.resolve('safenpm/dist/safenpm.mjs', { paths: [process.cwd()] });
+  var p = require.resolve('ringfence/dist/ringfence.mjs', { paths: [process.cwd()] });
   if (p) console.log(p);
 } catch(e) {}
 " 2>/dev/null)"
@@ -233,8 +233,8 @@ done
 # The $HOME / $PATH references are intentionally literal — they expand at
 # shell startup time for the user sourcing the rc file, not now.
 # shellcheck disable=SC2016
-PATH_LINE='export PATH="$HOME/.safenpm/bin:$PATH"  # safenpm'
-MARKER='# safenpm'
+PATH_LINE='export PATH="$HOME/.ringfence/bin:$PATH"  # ringfence'
+MARKER='# ringfence'
 
 apply_to_rc() {
     local rc="$1" status
@@ -250,5 +250,5 @@ apply_to_rc "$HOME/.bashrc"
 apply_to_rc "$HOME/.zshrc"
 apply_to_rc "$HOME/.profile"
 
-log "done. Open a new shell, or run:  export PATH=\"\$HOME/.safenpm/bin:\$PATH\""
-log "uninstall with:  $SAFENPM_HOME/uninstall.sh"
+log "done. Open a new shell, or run:  export PATH=\"\$HOME/.ringfence/bin:\$PATH\""
+log "uninstall with:  $RINGFENCE_HOME/uninstall.sh"

@@ -18,7 +18,7 @@ const skip = !bwrapAvailable() ? 'requires bwrap with user ns support' :
 
 let testRoot: string;
 let workdir: string;
-let safenpmHome: string;
+let ringfenceHome: string;
 let shimDir: string;
 let results: Results;
 let fixtureFile: string;
@@ -27,12 +27,12 @@ before(async () => {
     if (skip) return;
     fixtureFile = hostFixturePath(PM);
     await plantHostSecrets(PM);
-    testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), `safenpm-comp-${PM}-`));
-    safenpmHome = path.join(testRoot, 'safenpm');
-    shimDir = await createShimDir(safenpmHome);
+    testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), `ringfence-comp-${PM}-`));
+    ringfenceHome = path.join(testRoot, 'ringfence');
+    shimDir = await createShimDir(ringfenceHome);
     workdir = path.join(testRoot, 'project');
     await createProject(workdir, PM);
-    results = runInstall(workdir, safenpmHome, shimDir, PM);
+    results = runInstall(workdir, ringfenceHome, shimDir, PM);
 });
 
 after(async () => {
@@ -129,4 +129,4 @@ test(`${PM}: state-in-url dependency was installed`, { skip }, () => {
     const pj = JSON.parse(fs.readFileSync(path.join(workdir, "node_modules", "state-in-url", "package.json"), "utf8"));
     assert.ok(pj.name === "state-in-url", "state-in-url should be installed");
   });
-test(`${PM}: hostname is safenpm-sandbox`, { skip }, () => assert.equal(results.hostname, 'safenpm-sandbox'));
+test(`${PM}: hostname is ringfence-sandbox`, { skip }, () => assert.equal(results.hostname, 'ringfence-sandbox'));

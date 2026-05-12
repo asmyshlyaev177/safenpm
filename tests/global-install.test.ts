@@ -6,7 +6,7 @@
 //
 // Test isolation:
 //   - A self-contained shim is built in a tempdir per test run.
-//   - The bundle at dist/safenpm.mjs must exist (run pnpm build first).
+//   - The bundle at dist/ringfence.mjs must exist (run pnpm build first).
 //   - bwrap must be installed (Linux only).
 
 import { test } from 'node:test';
@@ -19,7 +19,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const BUNDLE = path.join(REPO_ROOT, 'dist/safenpm.mjs');
+const BUNDLE = path.join(REPO_ROOT, 'dist/ringfence.mjs');
 const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const;
 
 function hasBwrap(): boolean {
@@ -61,28 +61,28 @@ test(
     `global install: ${TEST_PKG} installs and its binary works`,
     { skip: skipReason },
     async () => {
-        const testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm-global-'));
-        const safenpmHome = path.join(testRoot, 'safenpm');
-        const shimDir = path.join(safenpmHome, 'bin');
+        const testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-global-'));
+        const ringfenceHome = path.join(testRoot, 'ringfence');
+        const shimDir = path.join(ringfenceHome, 'bin');
         const prefix = nodePrefix();
 
         try {
             // 1. Set up an isolated shim directory (same pattern as security.test.ts).
             await fsp.mkdir(shimDir, { recursive: true });
-            await fsp.copyFile(BUNDLE, path.join(shimDir, 'safenpm.mjs'));
-            await fsp.chmod(path.join(shimDir, 'safenpm.mjs'), 0o755);
+            await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
+            await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
             for (const pm of PACKAGE_MANAGERS) {
                 const shim = path.join(shimDir, pm);
                 await fsp.writeFile(
                     shim,
-                    `#!/usr/bin/env bash\nexec "${shimDir}/safenpm.mjs" ${pm} "$@"\n`,
+                    `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`,
                 );
                 await fsp.chmod(shim, 0o755);
             }
 
             const env = {
                 ...process.env,
-                SAFENPM_HOME: safenpmHome,
+                RINGFENCE_HOME: ringfenceHome,
                 PATH: `${shimDir}:${process.env.PATH}`,
                 // Plant secret env vars to ensure the sandbox doesn't break
                 // global installs while still stripping secrets inside.
@@ -97,7 +97,7 @@ test(
                 // not installed, that's fine
             }
 
-            // 3. Run global install through the safenpm shim.
+            // 3. Run global install through the ringfence shim.
             execFileSync('npm', ['i', '-g', TEST_PKG], { env, stdio: 'pipe' });
 
             // 4. Verify the binary symlink exists in the node prefix.
@@ -130,28 +130,28 @@ test(
     `global install does not affect package manager for other directories`,
     { skip: skipReason },
     async () => {
-        const testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm-global-'));
-        const safenpmHome = path.join(testRoot, 'safenpm');
-        const shimDir = path.join(safenpmHome, 'bin');
+        const testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-global-'));
+        const ringfenceHome = path.join(testRoot, 'ringfence');
+        const shimDir = path.join(ringfenceHome, 'bin');
         const prefix = nodePrefix();
 
         try {
             // 1. Set up shim.
             await fsp.mkdir(shimDir, { recursive: true });
-            await fsp.copyFile(BUNDLE, path.join(shimDir, 'safenpm.mjs'));
-            await fsp.chmod(path.join(shimDir, 'safenpm.mjs'), 0o755);
+            await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
+            await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
             for (const pm of PACKAGE_MANAGERS) {
                 const shim = path.join(shimDir, pm);
                 await fsp.writeFile(
                     shim,
-                    `#!/usr/bin/env bash\nexec "${shimDir}/safenpm.mjs" ${pm} "$@"\n`,
+                    `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`,
                 );
                 await fsp.chmod(shim, 0o755);
             }
 
             const env = {
                 ...process.env,
-                SAFENPM_HOME: safenpmHome,
+                RINGFENCE_HOME: ringfenceHome,
                 PATH: `${shimDir}:${process.env.PATH}`,
                 AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
                 NPM_TOKEN: 'npm_planted_leak',
@@ -181,7 +181,7 @@ test(
                 }),
             );
 
-            // Run npm install WITHOUT the safenpm shim in PATH
+            // Run npm install WITHOUT the ringfence shim in PATH
             // to verify the real npm still works after the global sandboxed install.
             const realPath = process.env.PATH;
             execFileSync('npm', ['install', '--package-lock-only'], {

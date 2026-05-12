@@ -1,10 +1,10 @@
 // Tests for the per-project bootstrap installer (scripts/init.cjs).
 //
-// init.cjs is the `safenpm-init` bin command. In a project directory it:
-//   - copies scripts/bootstrap-template.cjs to scripts/safenpm-bootstrap.cjs
-//   - adds {"scripts": {"preinstall": "node scripts/safenpm-bootstrap.cjs"}}
+// init.cjs is the `ringfence-init` bin command. In a project directory it:
+//   - copies scripts/bootstrap-template.cjs to scripts/ringfence-bootstrap.cjs
+//   - adds {"scripts": {"preinstall": "node scripts/ringfence-bootstrap.cjs"}}
 //   - warns (but doesn't break) when an existing preinstall hook is present
-//   - warns if safenpm isn't in {dev,}Dependencies
+//   - warns if ringfence isn't in {dev,}Dependencies
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
 import * as fs from 'node:fs';
@@ -25,7 +25,7 @@ type PackageJson = {
 };
 
 async function makeProject(pkg: PackageJson): Promise<string> {
-    const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm-init-'));
+    const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-init-'));
     await fsp.writeFile(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
     return dir;
 }
@@ -38,14 +38,14 @@ function runInit(cwd: string): { status: number | null; stdout: string; stderr: 
 test('init copies bootstrap template and adds preinstall hook', async () => {
     const dir = await makeProject({
         name: 'fixture',
-        devDependencies: { safenpm: '^0.1.0' },
+        devDependencies: { ringfence: '^0.1.0' },
     });
     try {
         const r = runInit(dir);
         assert.equal(r.status, 0, `init exited ${r.status}: ${r.stderr}`);
 
-        // Stub committed at scripts/safenpm-bootstrap.cjs.
-        const stub = path.join(dir, 'scripts/safenpm-bootstrap.cjs');
+        // Stub committed at scripts/ringfence-bootstrap.cjs.
+        const stub = path.join(dir, 'scripts/ringfence-bootstrap.cjs');
         assert.ok(fs.existsSync(stub), 'bootstrap stub should exist');
         assert.equal(fs.readFileSync(stub, 'utf8'), fs.readFileSync(TEMPLATE, 'utf8'));
 
@@ -57,7 +57,7 @@ test('init copies bootstrap template and adds preinstall hook', async () => {
         const pkg = JSON.parse(
             fs.readFileSync(path.join(dir, 'package.json'), 'utf8'),
         ) as PackageJson;
-        assert.equal(pkg.scripts?.preinstall, 'node scripts/safenpm-bootstrap.cjs');
+        assert.equal(pkg.scripts?.preinstall, 'node scripts/ringfence-bootstrap.cjs');
     } finally {
         await fsp.rm(dir, { recursive: true, force: true });
     }
@@ -66,7 +66,7 @@ test('init copies bootstrap template and adds preinstall hook', async () => {
 test('init is idempotent: second run does not duplicate the hook', async () => {
     const dir = await makeProject({
         name: 'fixture',
-        devDependencies: { safenpm: '^0.1.0' },
+        devDependencies: { ringfence: '^0.1.0' },
     });
     try {
         runInit(dir);
@@ -83,7 +83,7 @@ test('init refuses to clobber an unrelated preinstall script', async () => {
     const dir = await makeProject({
         name: 'fixture',
         scripts: { preinstall: 'echo "user-existing-script"' },
-        devDependencies: { safenpm: '^0.1.0' },
+        devDependencies: { ringfence: '^0.1.0' },
     });
     try {
         const r = runInit(dir);
@@ -103,19 +103,19 @@ test('init refuses to clobber an unrelated preinstall script', async () => {
     }
 });
 
-test('init warns when safenpm is not in dependencies', async () => {
+test('init warns when ringfence is not in dependencies', async () => {
     const dir = await makeProject({ name: 'fixture' });
     try {
         const r = runInit(dir);
         assert.equal(r.status, 0);
-        assert.match(r.stderr, /safenpm is not listed in/);
+        assert.match(r.stderr, /ringfence is not listed in/);
     } finally {
         await fsp.rm(dir, { recursive: true, force: true });
     }
 });
 
 test('init fails cleanly when package.json is missing', async () => {
-    const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm-init-empty-'));
+    const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-init-empty-'));
     try {
         const r = runInit(dir);
         assert.notEqual(r.status, 0, 'init must fail in a non-project dir');
@@ -125,12 +125,12 @@ test('init fails cleanly when package.json is missing', async () => {
     }
 });
 
-test('bootstrap template is a no-op when SAFENPM_ACTIVE=1 (re-entry guard)', () => {
-    // We can run the template directly without npm because the SAFENPM_ACTIVE
+test('bootstrap template is a no-op when RINGFENCE_ACTIVE=1 (re-entry guard)', () => {
+    // We can run the template directly without npm because the RINGFENCE_ACTIVE
     // guard is the very first thing it checks. This catches regressions
     // where the guard moves or breaks.
     const r = spawnSync(process.execPath, [TEMPLATE], {
-        env: { ...process.env, SAFENPM_ACTIVE: '1' },
+        env: { ...process.env, RINGFENCE_ACTIVE: '1' },
         encoding: 'utf8',
     });
     assert.equal(r.status, 0, 'guard must exit success');
@@ -138,11 +138,11 @@ test('bootstrap template is a no-op when SAFENPM_ACTIVE=1 (re-entry guard)', () 
     assert.equal(r.stderr, '', 'guard should produce no stderr');
 });
 
-test('bootstrap template bypasses when SAFENPM_BYPASS=1', () => {
+test('bootstrap template bypasses when RINGFENCE_BYPASS=1', () => {
     const r = spawnSync(process.execPath, [TEMPLATE], {
-        env: { ...process.env, SAFENPM_BYPASS: '1', SAFENPM_ACTIVE: '' },
+        env: { ...process.env, RINGFENCE_BYPASS: '1', RINGFENCE_ACTIVE: '' },
         encoding: 'utf8',
     });
     assert.equal(r.status, 0, 'bypass must exit success');
-    assert.match(r.stderr + r.stdout, /SAFENPM_BYPASS=1/);
+    assert.match(r.stderr + r.stdout, /RINGFENCE_BYPASS=1/);
 });

@@ -10,7 +10,7 @@ export type SandboxOpts = {
     realBin: string;
     workdir: string;
     args: readonly string[];
-    safenpmHome: string;
+    ringfenceHome: string;
 };
 
 // Compose the bwrap argv. Pure function — no spawning — so it can be unit-tested.
@@ -19,7 +19,7 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
     maskedSecrets: string[];
     strippedEnvs: string[];
 }> {
-    const { pm, realBin, workdir, safenpmHome } = opts;
+    const { pm, realBin, workdir, ringfenceHome } = opts;
     const home = process.env.HOME;
     if (!home) throw new Error('HOME is not set');
 
@@ -31,7 +31,7 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
         '--unshare-cgroup-try',
         '--share-net',
         '--hostname',
-        'safenpm-sandbox',
+        'ringfence-sandbox',
         '--proc',
         '/proc',
         '--dev',
@@ -145,8 +145,8 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
     }
 
     // Strip our shim dir from PATH inside the sandbox.
-    const shimDir = path.join(safenpmHome, 'bin');
-    const defaultShimDir = path.join(home, '.safenpm', 'bin');
+    const shimDir = path.join(ringfenceHome, 'bin');
+    const defaultShimDir = path.join(home, '.ringfence', 'bin');
     const cleanPath = (process.env.PATH ?? '')
         .split(':')
         .filter((d) => d && d !== shimDir && d !== defaultShimDir)
@@ -156,7 +156,7 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
     // Signal to nested preinstall hooks (e.g. the per-project bootstrap
     // stub) that they're already running under the sandbox and should be
     // a no-op rather than re-entering.
-    args.push('--setenv', 'SAFENPM_ACTIVE', '1');
+    args.push('--setenv', 'RINGFENCE_ACTIVE', '1');
 
     return { args, maskedSecrets, strippedEnvs };
 }

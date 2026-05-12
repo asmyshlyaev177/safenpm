@@ -16,7 +16,7 @@ const {
   canonical = SITE_URL,
 } = Astro.props;
 
-const siteTitle = title.includes("safenpm") ? title : `${title} — safenpm`;
+const siteTitle = title.includes("ringfence") ? title : `${title} — ringfence`;
 const imageUrl = new URL(image, canonical).href;
 ---
 
@@ -27,28 +27,28 @@ const imageUrl = new URL(image, canonical).href;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{siteTitle}</title>
     <meta name="description" content={description} />
-    <meta name="author" content="safenpm" />
+    <meta name="author" content="ringfence" />
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="oklch(0.115 0.006 60)" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href={canonical} />
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="safenpm" />
+    <meta property="og:site_name" content="ringfence" />
     <meta property="og:title" content={siteTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={imageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="safenpm — sandbox your package installs from supply-chain attacks" />
+    <meta property="og:image:alt" content="ringfence — sandbox your package installs from supply-chain attacks" />
     <meta property="og:locale" content="en_US" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={siteTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
-    <meta name="twitter:image:alt" content="safenpm — sandbox your package installs from supply-chain attacks" />
+    <meta name="twitter:image:alt" content="ringfence — sandbox your package installs from supply-chain attacks" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -58,7 +58,7 @@ const imageUrl = new URL(image, canonical).href;
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "safenpm",
+      name: "ringfence",
       applicationCategory: "DeveloperApplication",
       applicationSubCategory: "SecurityTool",
       operatingSystem: "Linux, macOS",

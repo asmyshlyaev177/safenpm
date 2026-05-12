@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
-SAFENPM_HOME="${SAFENPM_HOME:-$HOME/.safenpm}"
+RINGFENCE_HOME="${RINGFENCE_HOME:-$HOME/.ringfence}"
 
 # Locate rcedit.sh: prefer the one installed alongside this script (when
-# invoked via $SAFENPM_HOME/uninstall.sh after install), fall back to the
+# invoked via $RINGFENCE_HOME/uninstall.sh after install), fall back to the
 # source checkout (when invoked directly from the repo).
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for candidate in "$THIS_DIR/lib/rcedit.sh" "$SAFENPM_HOME/lib/rcedit.sh"; do
+for candidate in "$THIS_DIR/lib/rcedit.sh" "$RINGFENCE_HOME/lib/rcedit.sh"; do
     if [ -f "$candidate" ]; then
         # shellcheck source=lib/rcedit.sh
         . "$candidate"
@@ -14,7 +14,7 @@ for candidate in "$THIS_DIR/lib/rcedit.sh" "$SAFENPM_HOME/lib/rcedit.sh"; do
     fi
 done
 
-MARKER='# safenpm'
+MARKER='# ringfence'
 
 if ! declare -F rcedit_remove >/dev/null; then
     # Fallback: minimal inline removal so uninstall still works if the
@@ -42,7 +42,7 @@ remove_from_rc() {
     local rc="$1" status
     status="$(rcedit_remove "$rc" "$MARKER")"
     case "$status" in
-        removed) echo "[safenpm] cleaned $rc" ;;
+        removed) echo "[ringfence] cleaned $rc" ;;
         absent) : ;;
     esac
 }
@@ -50,8 +50,8 @@ remove_from_rc "$HOME/.bashrc"
 remove_from_rc "$HOME/.zshrc"
 remove_from_rc "$HOME/.profile"
 
-if [ -d "$SAFENPM_HOME" ]; then
-    rm -rf "$SAFENPM_HOME"
-    echo "[safenpm] removed $SAFENPM_HOME"
+if [ -d "$RINGFENCE_HOME" ]; then
+    rm -rf "$RINGFENCE_HOME"
+    echo "[ringfence] removed $RINGFENCE_HOME"
 fi
-echo "[safenpm] uninstalled. Open a new shell to refresh PATH."
+echo "[ringfence] uninstalled. Open a new shell to refresh PATH."

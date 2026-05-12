@@ -6,13 +6,13 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const BUNDLE = path.join(REPO_ROOT, 'dist/safenpm.mjs');
+export const BUNDLE = path.join(REPO_ROOT, 'dist/ringfence.mjs');
 export const PROBE = path.join(REPO_ROOT, 'tests/fixtures/leak-probe-comprehensive.cjs');
 export const HOST_FIXTURE_CONTENT = 'IF-YOU-CAN-READ-THIS-THE-SANDBOX-LEAKED';
 export const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const;
 
 export function hostFixturePath(pm: string): string {
-    return path.join(process.env.HOME!, `.safenpm-host-secret-fixture-${pm}`);
+    return path.join(process.env.HOME!, `.ringfence-host-secret-fixture-${pm}`);
 }
 
 export type ProbeResult = { ok: boolean; value?: string; code?: string };
@@ -56,14 +56,14 @@ export function probeVal(p: ProbeResult | string | string[] | null): ProbeResult
     return p as ProbeResult;
 }
 
-export async function createShimDir(safenpmHome: string): Promise<string> {
-    const shimDir = path.join(safenpmHome, 'bin');
+export async function createShimDir(ringfenceHome: string): Promise<string> {
+    const shimDir = path.join(ringfenceHome, 'bin');
     await fsp.mkdir(shimDir, { recursive: true });
-    await fsp.copyFile(BUNDLE, path.join(shimDir, 'safenpm.mjs'));
-    await fsp.chmod(path.join(shimDir, 'safenpm.mjs'), 0o755);
+    await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
+    await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
     for (const pm of PACKAGE_MANAGERS) {
         const shim = path.join(shimDir, pm);
-        await fsp.writeFile(shim, `#!/usr/bin/env bash\nexec "${shimDir}/safenpm.mjs" ${pm} "$@"\n`);
+        await fsp.writeFile(shim, `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`);
         await fsp.chmod(shim, 0o755);
     }
     return shimDir;
@@ -95,7 +95,7 @@ await fsp.mkdir(workdir, { recursive: true });
         await fsp.writeFile(path.join(workdir, name), content);
     }
     const pkg: Record<string, unknown> = {
-        name: `safenpm-comprehensive-${pm}`,
+        name: `ringfence-comprehensive-${pm}`,
         version: '0.0.0',
         private: true,
         scripts: { preinstall: 'node leak-probe.cjs' },
@@ -108,11 +108,11 @@ await fsp.mkdir(workdir, { recursive: true });
     await fsp.writeFile(path.join(workdir, 'package.json'), JSON.stringify(pkg, null, 2));
 }
 
-export function runInstall(workdir: string, safenpmHome: string, shimDir: string, pm: string): Results {
+export function runInstall(workdir: string, ringfenceHome: string, shimDir: string, pm: string): Results {
     const env: Record<string, string> = {
         ...process.env,
         PATH: `${shimDir}:${process.env.PATH}`,
-        SAFENPM_HOME: safenpmHome,
+        RINGFENCE_HOME: ringfenceHome,
         AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
         AWS_SESSION_TOKEN: 'IQoJb3JpZ2luX2VY-mock',
         NPM_TOKEN: 'npm_planted_leak',
@@ -137,8 +137,8 @@ export function runInstall(workdir: string, safenpmHome: string, shimDir: string
         STRIPE_SECRET_KEY: 'sk_planted_leak',
         TWILIO_ACCOUNT_SID: 'AC_planted_leak',
         HEROKU_API_KEY: 'hk_planted_leak',
-        SAFENPM_TEST_HARMLESS: 'harmless-flag-passes-through',
-        SAFENPM_TEST_PM: pm,
+        RINGFENCE_TEST_HARMLESS: 'harmless-flag-passes-through',
+        RINGFENCE_TEST_PM: pm,
     };
     execFileSync(pm, ['install'], { cwd: workdir, env, stdio: 'pipe' });
     return JSON.parse(fs.readFileSync(path.join(workdir, 'leak-results.json'), 'utf8')) as Results;
@@ -174,12 +174,12 @@ export async function plantHostSecrets(pm: string): Promise<void> {
     const gcloudDir = path.join(home, '.config', 'gcloud');
     await fsp.mkdir(gcloudDir, { recursive: true });
     await fsp.writeFile(path.join(gcloudDir, 'application_default_credentials.json'), '{"type":"service_account","private_key":"mock"}\n');
-    await fsp.writeFile(path.join(os.tmpdir(), 'safenpm-test-tmp-secret'), 'TMP-SECRET\n');
+    await fsp.writeFile(path.join(os.tmpdir(), 'ringfence-test-tmp-secret'), 'TMP-SECRET\n');
 }
 
 export async function cleanHostSecrets(pm: string): Promise<void> {
     const home = process.env.HOME!;
-    const all: string[] = [hostFixturePath(pm), path.join(os.tmpdir(), 'safenpm-test-tmp-secret')];
+    const all: string[] = [hostFixturePath(pm), path.join(os.tmpdir(), 'ringfence-test-tmp-secret')];
     for (const dir of ['.ssh', '.aws', '.gnupg', '.docker']) {
         for (const file of ['id_rsa', 'id_ed25519', 'id_dsa', 'id_ecdsa', 'authorized_keys', 'known_hosts', 'config', 'credentials', 'pubring.kbx', 'config.json']) {
             all.push(path.join(home, dir, file));

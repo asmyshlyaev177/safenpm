@@ -25,9 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build -t safenpm-test -f tests/Dockerfile .
+        run: docker build -t ringfence-test -f tests/Dockerfile .
       - name: Run tests
-        run: docker run --rm --privileged safenpm-test
+        run: docker run --rm --privileged ringfence-test
 
   test-separate:
     runs-on: ubuntu-latest
@@ -37,6 +37,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker image
-        run: docker build -t safenpm-test -f tests/Dockerfile .
+        run: docker build -t ringfence-test -f tests/Dockerfile .
       - name: Run tests for ${{ matrix.pm }}
-        run: docker run --rm --privileged safenpm-test pnpm run test -- --test-name-pattern='${{ matrix.pm }}:'
+        run: docker run --rm --privileged ringfence-test pnpm run test -- --test-name-pattern='${{ matrix.pm }}:'

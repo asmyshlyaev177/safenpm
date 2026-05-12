@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// safenpm dispatcher.
+// ringfence dispatcher.
 //
-// Invoked as:  safenpm <pm> <args...>      where pm is npm|pnpm|yarn|bun
+// Invoked as:  ringfence <pm> <args...>      where pm is npm|pnpm|yarn|bun
 //
 // Routes install-like subcommands through the platform sandbox (bwrap on
 // Linux, Docker on macOS); everything else execs the real package manager
@@ -14,14 +14,15 @@ import { runLinux } from '../lib/sandbox-linux.ts';
 import { runMacos } from '../lib/sandbox-macos.ts';
 import * as log from '../lib/log.ts';
 
-// console.debug('SAFENPM')
+// console.debug('RINGFENCE')
 
-const SAFENPM_HOME = process.env.SAFENPM_HOME ?? path.join(process.env.HOME ?? '', '.safenpm');
-const SHIM_DIR = path.join(SAFENPM_HOME, 'bin');
+const RINGFENCE_HOME =
+    process.env.RINGFENCE_HOME ?? path.join(process.env.HOME ?? '', '.ringfence');
+const SHIM_DIR = path.join(RINGFENCE_HOME, 'bin');
 
 function findRealBinary(name: string): string | null {
     const selfPath = path.join(SHIM_DIR, name);
-    const defaultShimPath = path.join(process.env.HOME ?? '', '.safenpm', 'bin', name);
+    const defaultShimPath = path.join(process.env.HOME ?? '', '.ringfence', 'bin', name);
     const dirs = (process.env.PATH ?? '').split(':');
     for (const d of dirs) {
         if (!d || d === SHIM_DIR) continue;
@@ -83,7 +84,7 @@ async function main(): Promise<void> {
         realBin,
         workdir,
         args,
-        safenpmHome: SAFENPM_HOME,
+        ringfenceHome: RINGFENCE_HOME,
     };
 
     switch (process.platform) {

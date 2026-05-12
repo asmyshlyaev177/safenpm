@@ -7,14 +7,14 @@ const { spawnSync } = require('node:child_process');
 
 const PROJECT_ROOT = process.cwd();
 
-const log = (msg) => process.stderr.write(`\x1b[1;34m[safenpm-bootstrap]\x1b[0m ${msg}\n`);
+const log = (msg) => process.stderr.write(`\x1b[1;34m[ringfence-bootstrap]\x1b[0m ${msg}\n`);
 
-if (process.env.SAFENPM_ACTIVE === '1') {
+if (process.env.RINGFENCE_ACTIVE === '1') {
     process.exit(0);
 }
 
-if (process.env.SAFENPM_BYPASS === '1') {
-    log('SAFENPM_BYPASS=1 set — letting unsandboxed install proceed.');
+if (process.env.RINGFENCE_BYPASS === '1') {
+    log('RINGFENCE_BYPASS=1 set — letting unsandboxed install proceed.');
     process.exit(0);
 }
 
@@ -31,18 +31,18 @@ function detectPM() {
 }
 
 function findBundle() {
-    // 1. Project-local safenpm (handles npm flat, pnpm nested, yarn PnP)
+    // 1. Project-local ringfence (handles npm flat, pnpm nested, yarn PnP)
     try {
-        const local = require.resolve('safenpm/dist/safenpm.mjs', { paths: [PROJECT_ROOT] });
+        const local = require.resolve('ringfence/dist/ringfence.mjs', { paths: [PROJECT_ROOT] });
         if (local && fs.existsSync(local)) return local;
     } catch {}
     // 2. Cached from a previous bootstrap run
-    const cached = path.join(PROJECT_ROOT, 'node_modules', '.safenpm', 'dist', 'safenpm.mjs');
+    const cached = path.join(PROJECT_ROOT, 'node_modules', '.ringfence', 'dist', 'ringfence.mjs');
     if (fs.existsSync(cached)) return cached;
-    // 3. Global safenpm install
+    // 3. Global ringfence install
     const home = process.env.HOME;
     if (home) {
-        const global_ = path.join(home, '.safenpm', 'bin', 'safenpm.mjs');
+        const global_ = path.join(home, '.ringfence', 'bin', 'ringfence.mjs');
         if (fs.existsSync(global_)) return global_;
     }
     return null;
@@ -66,8 +66,8 @@ function originalArgs(pm) {
     const bundlePath = findBundle();
 
     if (!bundlePath) {
-        log('safenpm bundle not found. Install safenpm globally (./install.sh) or');
-        log('  add it as a dependency: npm i -D safenpm && npx safenpm-init');
+        log('ringfence bundle not found. Install ringfence globally (./install.sh) or');
+        log('  add it as a dependency: npm i -D ringfence && npx ringfence-init');
         process.exit(2);
     }
 
@@ -81,7 +81,7 @@ function originalArgs(pm) {
         {
             cwd: PROJECT_ROOT,
             stdio: 'inherit',
-            env: { ...process.env, SAFENPM_ACTIVE: '1' },
+            env: { ...process.env, RINGFENCE_ACTIVE: '1' },
         },
     );
 

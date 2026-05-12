@@ -12,11 +12,11 @@ export type SandboxOpts = {
     realBin: string;
     workdir: string;
     args: readonly string[];
-    safenpmHome: string;
+    ringfenceHome: string;
 };
 
-const NODE_IMAGE = process.env.SAFENPM_NODE_IMAGE ?? 'node:lts';
-const BUN_IMAGE = process.env.SAFENPM_BUN_IMAGE ?? 'oven/bun:latest';
+const NODE_IMAGE = process.env.RINGFENCE_NODE_IMAGE ?? 'node:lts';
+const BUN_IMAGE = process.env.RINGFENCE_BUN_IMAGE ?? 'oven/bun:latest';
 
 const PM_AUX_EXCLUDES: ReadonlySet<string> = new Set(['.npmrc', '.yarnrc', '.yarnrc.yml']);
 
@@ -53,7 +53,7 @@ export async function runMacos(opts: SandboxOpts): Promise<never> {
     const { pm, workdir, args: pmArgs } = opts;
     const image = pm === 'bun' ? BUN_IMAGE : NODE_IMAGE;
 
-    const staging = await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm.'));
+    const staging = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence.'));
     let exitCode: number;
 
     try {

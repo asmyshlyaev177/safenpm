@@ -2,7 +2,7 @@
 //
 // These exercise lib/rcedit.sh in isolation, then run the actual shell
 // (bash or zsh) against the edited rc and assert that PATH picks up the
-// safenpm bin dir. That's stronger than just grepping the file — it
+// ringfence bin dir. That's stronger than just grepping the file — it
 // catches mistakes that produce a syntactically valid but semantically
 // wrong line.
 
@@ -19,8 +19,8 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const RCEDIT_SH = path.join(REPO_ROOT, 'lib/rcedit.sh');
 const FIXTURES = path.join(REPO_ROOT, 'tests/fixtures');
 
-const DESIRED = 'export PATH="$HOME/.safenpm/bin:$PATH"  # safenpm';
-const MARKER = '# safenpm';
+const DESIRED = 'export PATH="$HOME/.ringfence/bin:$PATH"  # ringfence';
+const MARKER = '# ringfence';
 
 type ApplyStatus = 'added' | 'updated' | 'unchanged' | 'absent';
 type RemoveStatus = 'removed' | 'absent';
@@ -69,7 +69,7 @@ function sourceRcAndGetPath(shell: 'bash' | 'zsh', home: string): string {
 }
 
 async function makeHome(): Promise<string> {
-    return await fsp.mkdtemp(path.join(os.tmpdir(), 'safenpm-test-'));
+    return await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-test-'));
 }
 
 async function cleanup(dir: string): Promise<void> {
@@ -118,7 +118,7 @@ test('apply preserves Ubuntu .bashrc content and appends our line', async () => 
         // our line was appended (not somewhere in the middle)
         assert.ok(after.trimEnd().endsWith(DESIRED), 'our line is at the end');
         // exactly one blank line between the original tail and our line
-        assert.match(after, /\n\nexport PATH="\$HOME\/\.safenpm\/bin:\$PATH"\s*# safenpm\n$/);
+        assert.match(after, /\n\nexport PATH="\$HOME\/\.ringfence\/bin:\$PATH"\s*# ringfence\n$/);
     } finally {
         await cleanup(home);
     }
@@ -144,7 +144,7 @@ test('apply updates an existing marker line in place when desired text changes',
     const home = await makeHome();
     try {
         const rc = path.join(home, '.zshrc');
-        const stale = 'export PATH="$HOME/.safenpm/old-bin:$PATH"  # safenpm';
+        const stale = 'export PATH="$HOME/.ringfence/old-bin:$PATH"  # ringfence';
         fs.writeFileSync(
             rc,
             `# top of file\nalias ll='ls -la'\n\n${stale}\n\nexport EDITOR=nano\n`,
@@ -198,7 +198,7 @@ test('rcedit_remove on a file without the marker is a no-op (absent)', async () 
     }
 });
 
-test('bash actually picks up safenpm/bin in $PATH after sourcing the edited .bashrc', async () => {
+test('bash actually picks up ringfence/bin in $PATH after sourcing the edited .bashrc', async () => {
     const home = await makeHome();
     try {
         const rc = path.join(home, '.bashrc');
@@ -206,7 +206,7 @@ test('bash actually picks up safenpm/bin in $PATH after sourcing the edited .bas
         applyEdit(rc);
 
         const newPath = sourceRcAndGetPath('bash', home);
-        assert.match(newPath, new RegExp(`(^|:)${escapeRe(home)}/\\.safenpm/bin(:|$)`));
+        assert.match(newPath, new RegExp(`(^|:)${escapeRe(home)}/\\.ringfence/bin(:|$)`));
         // and the user's existing ~/.local/bin entry should still be there
         assert.match(newPath, new RegExp(`(^|:)${escapeRe(home)}/\\.local/bin(:|$)`));
     } finally {
@@ -214,7 +214,7 @@ test('bash actually picks up safenpm/bin in $PATH after sourcing the edited .bas
     }
 });
 
-test('zsh actually picks up safenpm/bin in $PATH after sourcing the edited .zshrc', async () => {
+test('zsh actually picks up ringfence/bin in $PATH after sourcing the edited .zshrc', async () => {
     const home = await makeHome();
     try {
         const rc = path.join(home, '.zshrc');
@@ -222,7 +222,7 @@ test('zsh actually picks up safenpm/bin in $PATH after sourcing the edited .zshr
         applyEdit(rc);
 
         const newPath = sourceRcAndGetPath('zsh', home);
-        assert.match(newPath, new RegExp(`(^|:)${escapeRe(home)}/\\.safenpm/bin(:|$)`));
+        assert.match(newPath, new RegExp(`(^|:)${escapeRe(home)}/\\.ringfence/bin(:|$)`));
         // pre-existing PNPM_HOME entry should still be there
         assert.match(newPath, new RegExp(`(^|:)${escapeRe(home)}/\\.local/share/pnpm(:|$)`));
     } finally {
