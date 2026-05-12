@@ -5,7 +5,7 @@ import * as fsp from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import {
-    BUNDLE, PROBE, HOST_FIXTURE_CONTENT,
+    BUNDLE, HOST_FIXTURE_CONTENT,
     bwrapAvailable, pmAvailable, isLeak, probeVal,
     createShimDir, createProject, runInstall,
     plantHostSecrets, cleanHostSecrets, hostFixturePath, type Results,

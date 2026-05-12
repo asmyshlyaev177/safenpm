@@ -5,10 +5,18 @@ import * as path from 'node:path';
 // file as sensitive. Keep this in lockstep with the rsync excludes in
 // sandbox-macos.ts.
 const SECRET_FILE_PATTERNS: readonly RegExp[] = [
+    // All .env variants — local, production, staging, Vercel, AWS CDK, GCloud
     /^\.env$/i,
-    /^\.env\..+/i,
     /\.env$/i,
+    /^\.env\..+/i,
+    /\.env\.(local|production|staging|development|test|ci|uat)$/i,
+    /\.env\.(dev|prod|stage|test|ci|qa|preview|build)$/i,
     /^\.envrc$/i,
+    // Platform-specific env files
+    /^\.vercel/i,
+    /^\.netlify/i,
+    /^\.firebase/i,
+    // Credential files
     /^\.netrc$/i,
     /^_netrc$/i,
     /^\.pgpass$/i,
@@ -23,6 +31,8 @@ const SECRET_FILE_PATTERNS: readonly RegExp[] = [
     /\.(gpg|asc)$/i,
     /^gcloud-.+\.json$/i,
     /^service-account.*\.json$/i,
+    /^application_default_credentials\.json$/i,
+    /^aws-(credentials|config)$/i,
     // .npmrc / .yarnrc* are NOT masked — package managers write to them
     // legitimately during install.  $HOME/.npmrc is protected by being
     // mounted read-only via homeStateDirs() instead.
