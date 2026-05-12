@@ -15,30 +15,126 @@ keep working.
 
 ## Requirements
 
-- **Node.js 24+** (uses native TypeScript type stripping — no build step).
+- **Node.js ≥ 20** (the dispatcher is shipped as a pre-built CJS bundle).
 - **Linux**: `bubblewrap` (installed automatically by `install.sh`).
 - **macOS**: Docker Desktop running.
 
-A `.nvmrc` is included pinning Node 24.
+## Install — Linux
 
-## Install
+### 1. Install nvm (skip if you already have it)
 
 ```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+```
+
+Then open a new shell, or:
+
+```sh
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+```
+
+### 2. Install Node 20 (or newer) and make it the default
+
+```sh
+nvm install 20
+nvm alias default 20
+nvm use default
+node -v          # should print v20.x.y or higher
+```
+
+### 3a. Install from npm (recommended)
+
+```sh
+npm i -g safenpm
+safenpm-setup     # runs the installer (bwrap + shims + rc edit)
+```
+
+### 3b. Or install from a repo clone
+
+```sh
+git clone https://github.com/<your-fork>/safenpm.git
+cd safenpm
+pnpm install
+pnpm build        # produces dist/safenpm.cjs
 ./install.sh
 ```
 
 The installer:
 
-- verifies Node ≥ 24,
-- installs `bubblewrap` via your system package manager (Linux) or checks
-  that Docker is running (macOS),
-- creates `~/.safenpm/{bin,lib}` and copies the `.ts` sources there,
-- drops bash shims for `npm`, `pnpm`, `yarn`, `bun` into `~/.safenpm/bin`
-  (they `exec node ~/.safenpm/bin/safenpm.ts …`),
-- prepends that directory to `PATH` in `~/.bashrc`, `~/.zshrc`, `~/.profile`.
+1. verifies Node ≥ 24,
+2. installs `bubblewrap` via your system package manager (`apt`, `dnf`,
+   `pacman`, `zypper`, or `apk`) — uses `sudo` and prompts if needed,
+3. creates `~/.safenpm/{bin,lib}` and copies the `.ts` sources there,
+4. drops bash shims for `npm`, `pnpm`, `yarn`, `bun` into `~/.safenpm/bin`,
+5. prepends that directory to `PATH` in `~/.bashrc`, `~/.zshrc`, `~/.profile`.
 
-Open a new shell, then use `npm` / `pnpm` / `yarn` / `bun` as you normally
-would. No new command to learn.
+### 4. Activate the shim in your current shell
+
+```sh
+exec $SHELL -l    # or simply open a new terminal
+which npm         # should print /home/<you>/.safenpm/bin/npm
+```
+
+### 5. Verify it works
+
+```sh
+mkdir /tmp/safenpm-check && cd /tmp/safenpm-check
+echo 'SECRET=hunter2' > .env
+echo '{"name":"t","version":"1.0.0"}' > package.json
+npm install       # should print [safenpm] masking secret: .env
+cat .env          # still readable on the host — sandbox only hid it from npm
+```
+
+## Install — macOS
+
+### 1. Install Homebrew (skip if you have it)
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### 2. Install nvm + Node 20
+
+```sh
+brew install nvm
+mkdir -p "$HOME/.nvm"
+# Add nvm to your shell rc (one-time):
+echo 'export NVM_DIR="$HOME/.nvm"'                                       >> ~/.zshrc
+echo '[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"' >> ~/.zshrc
+exec $SHELL -l
+
+nvm install 20
+nvm alias default 20
+nvm use default
+```
+
+### 3. Install Docker Desktop and start it
+
+Download from <https://docs.docker.com/desktop/install/mac-install/>, install,
+launch it, and wait until the whale icon shows "running" in the menu bar.
+
+```sh
+docker info     # must succeed before running safenpm installs
+```
+
+### 4. Install safenpm
+
+```sh
+npm i -g safenpm
+safenpm-setup
+exec $SHELL -l
+```
+
+The setup skips the bubblewrap step on macOS and verifies Docker is
+reachable instead. The rest is identical to Linux.
+
+## Using safenpm
+
+After install, just use `npm`, `pnpm`, `yarn`, or `bun` as you normally
+would — no new command to learn. Install-like subcommands route through the
+sandbox; everything else (`npm run`, `npm test`, `npx`, ...) passes through
+unchanged.
 
 ## What's sandboxed
 
@@ -78,18 +174,22 @@ tokens for private registries still work. Everything else in `$HOME`
 ## Project layout
 
 ```text
-bin/safenpm.ts         dispatcher (Node entry point)
+bin/safenpm.ts         dispatcher entry point
 lib/pm.ts              package-manager metadata + install-like detection
 lib/detect.ts          secret-file and secret-env enumeration
 lib/sandbox-linux.ts   builds bwrap argv and execs
 lib/sandbox-macos.ts   stages workdir, runs Docker container, syncs back
 lib/log.ts             colored stderr helpers
-install.sh             one-shot bash installer
+lib/rcedit.sh          shell-rc edit helpers (sourced by install/uninstall)
+scripts/build.mjs      esbuild bundler config
+install.sh             one-shot bash installer (npm bin: safenpm-setup)
 uninstall.sh
+dist/safenpm.cjs       bundled dispatcher (generated, gitignored, shipped)
 ```
 
-All wrapper logic is TypeScript, run directly by Node — no build step, no
-emitted artifacts.
+The wrapper is written in TypeScript and bundled to a single self-contained
+CJS file via esbuild — this keeps the runtime requirement at Node ≥ 20
+while letting contributors work in modern TS.
 
 ## Contributing
 
@@ -102,11 +202,16 @@ Then:
 
 ```sh
 pnpm install        # installs deps and activates the husky pre-commit hook
+pnpm build          # bundle bin/safenpm.ts → dist/safenpm.cjs via esbuild
 pnpm test           # node:test suite (10 cases covering rc-file editing)
 pnpm typecheck      # tsc --noEmit
 pnpm check          # eslint (read-only): fails if anything needs fixing
 pnpm fix            # eslint --fix: lint and format every supported file type
 ```
+
+Contributors need Node ≥ 22.6 (for the test suite, which uses native TS
+type-stripping in `node --test`). End users only need Node ≥ 20 because
+the shipped dispatcher is the pre-built CJS bundle.
 
 ESLint is the single entry point for both lint and format. `@eslint/json`
 and `@eslint/markdown` give it support for `.json` and `.md`;

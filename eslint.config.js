@@ -17,10 +17,12 @@ export default tseslint.config(
     {
         ignores: [
             'node_modules/',
+            'dist/',
             'tests/fixtures/',
             '.husky/_/',
             '.claude/',
             'eslint.config.js',
+            'scripts/build.mjs',
             'pnpm-lock.yaml',
         ],
     },
