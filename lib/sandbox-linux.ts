@@ -86,9 +86,11 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
     // volta). The tmpfs above would hide it, so bind its install prefix
     // (two levels up from the binary captures both bin/ and lib/node_modules
     // or equivalent).
+    // For global installs (-g / --global) the prefix must be writable.
+    const isGlobal = opts.args.some((a) => a === '-g' || a === '--global');
     const prefix = path.dirname(path.dirname(realBin));
     if (fs.existsSync(prefix)) {
-        args.push('--ro-bind', prefix, prefix);
+        args.push(isGlobal ? '--bind' : '--ro-bind', prefix, prefix);
     }
 
     // If the binary is a symlink targeting another prefix, expose that too.
@@ -100,7 +102,7 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
             const isInsidePrefix =
                 resolvedPrefix === prefix || resolvedPrefix.startsWith(prefix + sep);
             if (!isInsidePrefix && fs.existsSync(resolvedPrefix)) {
-                args.push('--ro-bind', resolvedPrefix, resolvedPrefix);
+                args.push(isGlobal ? '--bind' : '--ro-bind', resolvedPrefix, resolvedPrefix);
             }
         }
     } catch {

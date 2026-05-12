@@ -40,7 +40,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepack": "node scripts/build.mjs",
-    "test": "node --experimental-strip-types --test 'tests/**/*.test.ts'",
+    "test": "if [ ! -f /.dockerenv ] && [ -z \"$CI\" ]; then echo 'ERROR: Tests modify host files under $HOME and MUST run inside Docker.'; echo '  Run: npm run test:docker'; echo '  Or: docker build -t safenpm-test -f tests/Dockerfile . && docker run --rm --privileged safenpm-test'; exit 1; fi && node --experimental-strip-types --test 'tests/**/*.test.ts'",
     "test:docker": "docker build -t safenpm-test -f tests/Dockerfile . && docker run --rm --privileged safenpm-test",
     "typecheck": "tsc --noEmit",
     "check": "eslint .",
