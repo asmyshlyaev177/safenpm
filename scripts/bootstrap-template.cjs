@@ -23,7 +23,12 @@ function detectPM() {
     if (ua.includes('pnpm')) return 'pnpm';
     if (ua.includes('yarn')) return 'yarn';
     if (ua.includes('bun')) return 'bun';
-    const lockFiles = [['pnpm-lock.yaml', 'pnpm'], ['yarn.lock', 'yarn'], ['bun.lockb', 'bun'], ['bun.lock', 'bun']];
+    const lockFiles = [
+        ['pnpm-lock.yaml', 'pnpm'],
+        ['yarn.lock', 'yarn'],
+        ['bun.lockb', 'bun'],
+        ['bun.lock', 'bun'],
+    ];
     for (const [lock, pm] of lockFiles) {
         if (fs.existsSync(path.join(PROJECT_ROOT, lock))) return pm;
     }
@@ -68,29 +73,43 @@ function originalArgs(pm) {
 
     const args = originalArgs(pm);
     const sub = args[0] || 'install';
-    const isInstall = ['i', 'install', 'add', 'update', 'up', 'upgrade', 'rebuild', 'dlx', 'create', 'ci', 'isntall', 'ins', 'inst', 'insta', 'instal', 'in', 'exec'].includes(sub);
+    const isInstall = [
+        'i',
+        'install',
+        'add',
+        'update',
+        'up',
+        'upgrade',
+        'rebuild',
+        'dlx',
+        'create',
+        'ci',
+        'isntall',
+        'ins',
+        'inst',
+        'insta',
+        'instal',
+        'in',
+        'exec',
+    ].includes(sub);
 
     if (!isInstall) {
-        const result = spawnSync(
-            process.execPath,
-            [bundlePath, pm, ...args],
-            { cwd: PROJECT_ROOT, stdio: 'inherit', env: { ...process.env, RINGFENCE_ACTIVE: '1' } },
-        );
+        const result = spawnSync(process.execPath, [bundlePath, pm, ...args], {
+            cwd: PROJECT_ROOT,
+            stdio: 'inherit',
+            env: { ...process.env, RINGFENCE_ACTIVE: '1' },
+        });
         process.exit(result.status ?? 1);
     }
 
     log(`detected package manager: ${pm}`);
     log(`re-running "${pm} ${args.join(' ')}" through sandbox...`);
 
-    const result = spawnSync(
-        process.execPath,
-        [bundlePath, pm, ...args],
-        {
-            cwd: PROJECT_ROOT,
-            stdio: 'inherit',
-            env: { ...process.env, RINGFENCE_ACTIVE: '1' },
-        },
-    );
+    const result = spawnSync(process.execPath, [bundlePath, pm, ...args], {
+        cwd: PROJECT_ROOT,
+        stdio: 'inherit',
+        env: { ...process.env, RINGFENCE_ACTIVE: '1' },
+    });
 
     if (result.status !== 0) {
         log(`sandboxed install exited with code ${result.status ?? '?'}`);

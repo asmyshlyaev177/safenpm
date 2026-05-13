@@ -26,25 +26,54 @@ export default tseslint.config(
             '.agents/',
             'site/',
             'eslint.config.js',
-            'scripts/build.mjs',
-            'scripts/init.cjs',
-            'scripts/bootstrap-template.cjs',
-            'scripts/postinstall.mjs',
-            'tests/docker-beta-test.mjs',
-            'scripts/postinstall.mjs',
-            'tests/docker-beta-test.mjs',
             'pnpm-lock.yaml',
         ],
     },
 
     // JS/TS — scoped so JS-style rules don't try to run on JSON/MD files.
     { files: ['**/*.{ts,js,mjs,cjs}'], ...js.configs.recommended },
-    ...tseslint.configs.recommendedTypeChecked.map((c) => ({
+    {
         files: ['**/*.{ts,js,mjs,cjs}'],
+        rules: { 'no-empty': ['error', { allowEmptyCatch: true }] },
+    },
+
+    // CJS files — not in the TypeScript project, but need Node.js globals.
+    {
+        files: ['**/*.cjs'],
+        languageOptions: {
+            globals: {
+                process: 'readonly',
+                require: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
+                module: 'readonly',
+                console: 'readonly',
+                Buffer: 'readonly',
+                setTimeout: 'readonly',
+                clearTimeout: 'readonly',
+                setInterval: 'readonly',
+                clearInterval: 'readonly',
+            },
+        },
+    },
+    // MJS files not in tsconfig need process/console globals.
+    {
+        files: ['scripts/postinstall.mjs', 'scripts/build.mjs', 'tests/docker-beta-test.mjs'],
+        languageOptions: {
+            globals: {
+                process: 'readonly',
+                console: 'readonly',
+            },
+        },
+    },
+
+    // TypeScript rules — only .ts files in the tsconfig project.
+    ...tseslint.configs.recommendedTypeChecked.map((c) => ({
+        files: ['**/*.ts'],
         ...c,
     })),
     {
-        files: ['**/*.{ts,js,mjs,cjs}'],
+        files: ['**/*.ts'],
         languageOptions: {
             parserOptions: {
                 projectService: true,
@@ -60,7 +89,6 @@ export default tseslint.config(
                     caughtErrorsIgnorePattern: '^_',
                 },
             ],
-            'no-empty': ['error', { allowEmptyCatch: true }],
         },
     },
     {

@@ -12,7 +12,7 @@
 //   - The bundle at dist/ringfence.mjs must exist (run pnpm build first).
 //   - bwrap must be installed (Linux only).
 
-import { describe, test, before, after } from 'node:test';
+import { describe, test, after } from 'node:test';
 import * as assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
@@ -26,7 +26,7 @@ const BUNDLE = path.join(REPO_ROOT, 'dist/ringfence.mjs');
 const PROBE = path.join(REPO_ROOT, 'tests/fixtures/leak-probe-second-install.cjs');
 
 type ProbeResult = { ok: boolean; value?: string; code?: string };
-type Results = Record<string, ProbeResult | string | string[] | null>;
+type Results = Record<string, ProbeResult | boolean | string | string[] | null>;
 
 function hasBwrap(): boolean {
     try {
