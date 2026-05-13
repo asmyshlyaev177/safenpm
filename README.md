@@ -183,7 +183,7 @@ lib/log.ts             colored stderr helpers
 lib/rcedit.sh          shell-rc edit helpers (sourced by install/uninstall)
 scripts/build.mjs      esbuild bundler config
 install.sh             one-shot bash installer (npm bin: ringfence-setup)
-uninstall.sh
+uninstall.sh           (npm bin: ringfence-uninstall)           (npm bin: ringfence-uninstall)
 dist/ringfence.cjs       bundled dispatcher (generated, gitignored, shipped)
 ```
 
@@ -231,8 +231,32 @@ properties) so Node's native type stripping keeps working without
 ## Uninstall
 
 ```sh
+npx ringfence-uninstall
+```
+
+Or, if you still have ringfence on PATH:
+
+```sh
 ~/.ringfence/uninstall.sh
 ```
+
+The script removes the ringfence PATH entry from `~/.bashrc`, `~/.zshrc`, and
+`~/.profile`, then deletes `~/.ringfence`. Open a new shell afterward to
+refresh PATH. All package managers (`npm`, `pnpm`, `yarn`, `bun`) continue
+working as normal — ringfence only adds shims; it doesn't modify your system
+package managers.
+
+Or, if you still have ringfence on PATH:
+
+```sh
+~/.ringfence/uninstall.sh
+```
+
+The script removes the ringfence PATH entry from `~/.bashrc`, `~/.zshrc`, and
+`~/.profile`, then deletes `~/.ringfence`. Open a new shell afterward to
+refresh PATH. All package managers (`npm`, `pnpm`, `yarn`, `bun`) continue
+working as normal — ringfence only adds shims; it doesn't modify your system
+package managers.
 
 ## Limitations
 

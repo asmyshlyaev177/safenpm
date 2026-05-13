@@ -16,6 +16,7 @@
   },
   "bin": {
     "ringfence-setup": "install.sh",
+    "ringfence-uninstall": "uninstall.sh",
     "ringfence-init": "scripts/init.cjs"
   },
   "main": "dist/ringfence.cjs",
