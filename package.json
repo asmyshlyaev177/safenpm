@@ -1,6 +1,6 @@
 {
   "name": "ringfence",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Sandbox npm/pnpm/yarn/bun install with bwrap (Linux) or Docker (macOS) to keep secrets in the working directory and host $HOME out of reach of postinstall scripts.",
   "type": "module",
   "license": "MIT",
