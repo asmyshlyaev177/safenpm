@@ -158,6 +158,14 @@ export async function buildBwrapArgs(opts: SandboxOpts): Promise<{
     // a no-op rather than re-entering.
     args.push('--setenv', 'RINGFENCE_ACTIVE', '1');
 
+    // Prevent pnpm from asking TTY questions inside the sandbox.
+    args.push('--setenv', 'CI', 'true');
+
+    // Use copy instead of rename for package imports to avoid ENOTEMPTY
+    // errors from pnpm's atomic-rename trick on bwrap's overlay filesystem.
+    // https://github.com/pnpm/pnpm/issues/9717
+    args.push('--setenv', 'npm_config_package_import_method', 'copy');
+
     return { args, maskedSecrets, strippedEnvs };
 }
 
@@ -182,7 +190,14 @@ export async function runLinux(opts: SandboxOpts): Promise<never> {
 
     log.info(`running ${pm} ${pmArgs.join(' ')} in bwrap sandbox`);
 
-    const child = spawn('bwrap', [...bwrapArgs, realBin, ...pmArgs], { stdio: 'inherit' });
+    const child = spawn('bwrap', [...bwrapArgs, realBin, ...pmArgs], {
+        stdio: 'inherit',
+        env: {
+            ...process.env,
+            CI: 'true',
+            npm_config_package_import_method: 'copy',
+        },
+    });
     return await new Promise<never>((_resolve, reject) => {
         child.on('error', (e) => reject(e));
         child.on('exit', (code, signal) => {
