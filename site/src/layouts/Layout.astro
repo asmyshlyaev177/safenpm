@@ -1,6 +1,6 @@
 ---
 import '../styles/globals.css';
-import { SITE_URL } from '../constants';
+import { SITE_URL, VERSION } from '../constants';
 
 export interface Props {
   title: string;
@@ -65,7 +65,7 @@ const imageUrl = new URL(image, canonical).href;
       description: "Sandbox npm/pnpm/yarn/bun installs with bwrap (Linux) or Docker (macOS) to keep secrets out of reach of postinstall scripts.",
       url: SITE_URL,
       keywords: "npm security, supply chain security, sandbox npm install, bubblewrap, postinstall protection, open source security",
-      softwareVersion: "0.1.0",
+      softwareVersion: VERSION,
       offers: {
         "@type": "Offer",
         price: "0",

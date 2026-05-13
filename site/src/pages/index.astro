@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { SITE_URL } from "../constants";
+import { SITE_URL, VERSION } from "../constants";
 ---
 
 <Layout
@@ -50,7 +50,7 @@ import { SITE_URL } from "../constants";
         >
           <div class="mb-8 flex items-center justify-center gap-2">
             <span class="badge badge-warning">Beta</span>
-            <span class="text-sm text-muted">v0.1.0 &middot; Linux &amp; macOS</span>
+            <span class="text-sm text-muted">v{VERSION} &middot; Linux &amp; macOS</span>
           </div>
 
           <h1
@@ -94,7 +94,7 @@ import { SITE_URL } from "../constants";
             class="mt-14 inline-flex items-center gap-2 rounded-full border border-border bg-surface/50 px-5 py-2"
           >
             <span class="flex h-2 w-2 rounded-full bg-success"></span>
-            <span class="text-xs text-muted">No <code class="font-mono text-xs text-body">sudo</code> required &middot; Local dev dependency &middot; Open source (MIT)</span>
+            <span class="text-xs text-muted">Local dev dependency &middot; Open source (MIT)</span>
           </div>
         </div>
       </section>
