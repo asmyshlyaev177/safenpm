@@ -14,6 +14,12 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "include": ["bin/**/*.ts", "lib/**/*.ts", "tests/**/*.test.ts"],
+  "include": [
+    "bin/**/*.ts",
+    "lib/**/*.ts",
+    "tests/**/*.test.ts",
+    "tests/*.mjs",
+    "scripts/postinstall.mjs"
+  ],
   "exclude": ["tests/comprehensive-helpers.ts", "tests/comprehensive-*.test.ts"]
 }
