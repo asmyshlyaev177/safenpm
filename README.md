@@ -1,82 +1,69 @@
-# ringfence
+# ringfence — supply-chain security for npm/pnpm/yarn/bun install
 
-Transparent sandbox around `npm install` (and `pnpm`, `yarn`, `bun`) so a
-malicious postinstall script can't read your `.env`, SSH keys, or cloud
-credentials.
+<div align="center">
+
+[![npm](https://img.shields.io/npm/v/ringfence.svg)](https://www.npmjs.com/package/ringfence)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/ringfence.svg)
+![Tests](https://github.com/asmyshlyaev177/ringfence/actions/workflows/test.yml/badge.svg?branch=main)
+
+</div>
+
+Every time you run `npm install`, you hand your secrets to hundreds of
+third-party postinstall scripts. Supply-chain worms (dubbed "Shai-Hulud"
+after the sandworm that swallows everything in its path) use these hooks
+to exfiltrate `.env` files, SSH keys, and cloud credentials from your
+machine. **ringfence** wraps install commands in a lightweight sandbox so
+a compromised dependency can't touch your secrets or `$HOME`.
+
+Works transparently — keep using your normal commands, no config needed.
 
 - **Linux**: uses [bubblewrap](https://github.com/containers/bubblewrap) to
-  hide each detected secret file, replace `$HOME` with a tmpfs, and unset
-  secret-shaped environment variables.
-- **macOS**: same effect via an ephemeral Docker container with a
-  secret-filtered copy of the project mounted.
+  mask each detected secret file with `/dev/null`, replace `$HOME` with a
+  tmpfs, and unset secret-shaped environment variables.
+- **macOS**: achieves the same isolation through an ephemeral Docker
+  container with a secret-filtered copy of the project mounted.
 
-Network is left unrestricted so registries, `git:` deps, and tarball URLs
-keep working.
+Network stays unrestricted — registries, `git:` deps, and tarball URLs
+work as usual.
 
-## Requirements
+## Quick start
 
-- **Node.js ≥ 20** (the dispatcher is shipped as a pre-built CJS bundle).
-- **Linux**: `bubblewrap` (installed automatically by `install.sh`).
-- **macOS**: Docker Desktop running.
-
-## Install — Linux
-
-### 1. Install nvm (skip if you already have it)
+### Linux
 
 ```sh
+# 1. Make sure you have Node >= 20 (nvm recommended)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-```
-
-Then open a new shell, or:
-
-```sh
+# open a new shell, or:
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-```
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
-### 2. Install Node 20 (or newer) and make it the default
+nvm install 20 && nvm alias default 20 && nvm use default
 
-```sh
-nvm install 20
-nvm alias default 20
-nvm use default
-node -v          # should print v20.x.y or higher
-```
-
-### 3a. Install from npm (recommended)
-
-```sh
+# 2. Install ringfence in one command
 npm i -g ringfence
-ringfence-setup     # runs the installer (bwrap + shims + rc edit)
+ringfence-setup
+
+# 3. Activate the shim
+exec $SHELL -l
+which npm   # should print /home/<you>/.ringfence/bin/npm
 ```
 
-### 3b. Or install from a repo clone
+The installer detects your package manager (`apt`, `dnf`, `yum`, `pacman`,
+`zypper`, or `apk`) and installs `bubblewrap` with `sudo` automatically.
+
+### macOS
 
 ```sh
-git clone https://github.com/<your-fork>/ringfence.git
-cd ringfence
-pnpm install
-pnpm build        # produces dist/ringfence.cjs
-./install.sh
+# 1. Install Docker Desktop from https://docs.docker.com/desktop/install/mac-install/
+#    and make sure `docker info` succeeds.
+
+# 2. Install ringfence
+npm i -g ringfence
+ringfence-setup
+exec $SHELL -l
 ```
 
-The installer:
-
-1. verifies Node ≥ 24,
-2. installs `bubblewrap` via your system package manager (`apt`, `dnf`,
-   `pacman`, `zypper`, or `apk`) — uses `sudo` and prompts if needed,
-3. creates `~/.ringfence/{bin,lib}` and copies the `.ts` sources there,
-4. drops bash shims for `npm`, `pnpm`, `yarn`, `bun` into `~/.ringfence/bin`,
-5. prepends that directory to `PATH` in `~/.bashrc`, `~/.zshrc`, `~/.profile`.
-
-### 4. Activate the shim in your current shell
-
-```sh
-exec $SHELL -l    # or simply open a new terminal
-which npm         # should print /home/<you>/.ringfence/bin/npm
-```
-
-### 5. Verify it works
+### Verify it works
 
 ```sh
 mkdir /tmp/ringfence-check && cd /tmp/ringfence-check
@@ -86,188 +73,74 @@ npm install       # should print [ringfence] masking secret: .env
 cat .env          # still readable on the host — sandbox only hid it from npm
 ```
 
-## Install — macOS
+## How it works
 
-### 1. Install Homebrew (skip if you have it)
+After install, every `npm install`, `pnpm add`, `yarn`, or `bun install`
+automatically routes through the sandbox. Non-install commands (`npm run`,
+`npm test`, `npx`, etc.) pass through unchanged.
 
-```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
+**What's sandboxed:**
 
-### 2. Install nvm + Node 20
+| Manager | Intercepted subcommands                                  |
+| ------- | -------------------------------------------------------- |
+| `npm`   | `install`, `i`, `ci`, `add`, `update`, `rebuild`, `exec` |
+| `pnpm`  | `install`, `add`, `update`, `rebuild`, `dlx`, `create`   |
+| `yarn`  | `install` (default), `add`, `upgrade`, `create`, `dlx`   |
+| `bun`   | `install`, `add`, `update`, `create`, `x`                |
 
-```sh
-brew install nvm
-mkdir -p "$HOME/.nvm"
-# Add nvm to your shell rc (one-time):
-echo 'export NVM_DIR="$HOME/.nvm"'                                       >> ~/.zshrc
-echo '[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"' >> ~/.zshrc
-exec $SHELL -l
+**What's hidden:**
 
-nvm install 20
-nvm alias default 20
-nvm use default
-```
+Files matching secret patterns — `.env`, `.env.*`, `.netrc`, `*.pem`,
+`id_rsa*`, `*.gpg`, `credentials.json`, `secret*.{json,yaml,yml}`,
+`*.key`, cloud service account files, and more — are masked with
+`/dev/null` inside the sandbox.
 
-### 3. Install Docker Desktop and start it
+Environment variables matching `*TOKEN*`, `*SECRET*`, `*PASSWORD*`,
+`*API_KEY*`, `*PRIVATE_KEY*`, `*CREDENTIAL*`, or known cloud prefixes
+(`AWS_`, `GITHUB_`, `NPM_`, ...) are unset before the package manager runs.
 
-Download from <https://docs.docker.com/desktop/install/mac-install/>, install,
-launch it, and wait until the whale icon shows "running" in the menu bar.
-
-```sh
-docker info     # must succeed before running ringfence installs
-```
-
-### 4. Install ringfence
-
-```sh
-npm i -g ringfence
-ringfence-setup
-exec $SHELL -l
-```
-
-The setup skips the bubblewrap step on macOS and verifies Docker is
-reachable instead. The rest is identical to Linux.
-
-## Using ringfence
-
-After install, just use `npm`, `pnpm`, `yarn`, or `bun` as you normally
-would — no new command to learn. Install-like subcommands route through the
-sandbox; everything else (`npm run`, `npm test`, `npx`, ...) passes through
-unchanged.
-
-## What's sandboxed
-
-Only install-like subcommands — the ones that fetch and execute third-party
-code with lifecycle scripts:
-
-- `npm`: `install`, `i`, `ci`, `add`, `update`, `rebuild`, `exec`
-- `pnpm`: `install`, `add`, `update`, `rebuild`, `dlx`, `create`
-- `yarn`: `install` (default), `add`, `upgrade`, `create`, `dlx`
-- `bun`: `install`, `add`, `update`, `create`, `x`
-
-Everything else (`npm run dev`, `npm test`, etc.) passes through unchanged.
-
-## What's hidden
-
-Files inside the project that match secret-looking patterns:
-
-```text
-.env, .env.*, .envrc, .netrc, .pgpass, .my.cnf
-credentials, secrets, *secret*.json/yaml/yml
-*.pem, *.key, *.crt, *.cer, *.pfx, *.p12, *.jks, *.keystore
-id_rsa*, id_dsa*, id_ecdsa*, id_ed25519*
-known_hosts, authorized_keys
-*.gpg, *.asc
-gcloud-*.json, service-account*.json
-```
-
-Environment variables whose names match `*TOKEN*`, `*SECRET*`, `*PASSWORD*`,
-`*API_KEY*`, `*PRIVATE_KEY*`, `*CREDENTIAL*`, or known cloud-provider
-prefixes (`AWS_`, `GITHUB_`, `NPM_`, ...) are unset before the package
-manager runs.
-
-`~/.npmrc`, `~/.yarnrc`, `~/.yarnrc.yml` are mounted read-only so auth
-tokens for private registries still work. Everything else in `$HOME`
-(`~/.ssh`, `~/.aws`, `~/.gnupg`, ...) is invisible.
-
-## Project layout
-
-```text
-bin/ringfence.ts         dispatcher entry point
-lib/pm.ts              package-manager metadata + install-like detection
-lib/detect.ts          secret-file and secret-env enumeration
-lib/sandbox-linux.ts   builds bwrap argv and execs
-lib/sandbox-macos.ts   stages workdir, runs Docker container, syncs back
-lib/log.ts             colored stderr helpers
-lib/rcedit.sh          shell-rc edit helpers (sourced by install/uninstall)
-scripts/build.mjs      esbuild bundler config
-install.sh             one-shot bash installer (npm bin: ringfence-setup)
-uninstall.sh           (npm bin: ringfence-uninstall)           (npm bin: ringfence-uninstall)
-dist/ringfence.cjs       bundled dispatcher (generated, gitignored, shipped)
-```
-
-The wrapper is written in TypeScript and bundled to a single self-contained
-CJS file via esbuild — this keeps the runtime requirement at Node ≥ 20
-while letting contributors work in modern TS.
-
-## Contributing
-
-System prereqs (used by the pre-commit hook):
-
-- **ShellCheck** — `dnf install ShellCheck` / `brew install shellcheck` / `apt install shellcheck`
-- **shfmt** — `dnf install shfmt` / `brew install shfmt`
-
-Then:
-
-```sh
-pnpm install        # installs deps and activates the husky pre-commit hook
-pnpm build          # bundle bin/ringfence.ts → dist/ringfence.cjs via esbuild
-pnpm test           # node:test suite (10 cases covering rc-file editing)
-pnpm typecheck      # tsc --noEmit
-pnpm check          # eslint (read-only): fails if anything needs fixing
-pnpm fix            # eslint --fix: lint and format every supported file type
-```
-
-Contributors need Node ≥ 22.6 (for the test suite, which uses native TS
-type-stripping in `node --test`). End users only need Node ≥ 20 because
-the shipped dispatcher is the pre-built CJS bundle.
-
-ESLint is the single entry point for both lint and format. `@eslint/json`
-and `@eslint/markdown` give it support for `.json` and `.md`;
-`eslint-plugin-prettier` plugs Prettier in as the formatter, so a single
-`pnpm fix` formats `.ts`, `.js`, `.json`, and `.md` consistently.
-
-Shell scripts go through `shfmt` + `ShellCheck` separately (pre-commit
-hook only — ESLint has no shell support).
-
-The pre-commit hook runs `lint-staged` (eslint on .ts/.js/.json/.md,
-ShellCheck + shfmt on .sh) followed by `tsc --noEmit`.
-
-Stick to "erasable" TypeScript (no `enum`, `namespace`, parameter
-properties) so Node's native type stripping keeps working without
-`--experimental-transform-types`.
+`~/.npmrc`, `~/.yarnrc`, `~/.yarnrc.yml` are mounted read-only so private
+registry auth still works. Everything else in `$HOME` (`~/.ssh`, `~/.aws`,
+`~/.gnupg`, ...) is invisible.
 
 ## Uninstall
 
 ```sh
 npx ringfence-uninstall
-```
-
-Or, if you still have ringfence on PATH:
-
-```sh
+# or if you still have ringfence on PATH:
 ~/.ringfence/uninstall.sh
 ```
 
-The script removes the ringfence PATH entry from `~/.bashrc`, `~/.zshrc`, and
-`~/.profile`, then deletes `~/.ringfence`. Open a new shell afterward to
-refresh PATH. All package managers (`npm`, `pnpm`, `yarn`, `bun`) continue
-working as normal — ringfence only adds shims; it doesn't modify your system
-package managers.
-
-Or, if you still have ringfence on PATH:
-
-```sh
-~/.ringfence/uninstall.sh
-```
-
-The script removes the ringfence PATH entry from `~/.bashrc`, `~/.zshrc`, and
-`~/.profile`, then deletes `~/.ringfence`. Open a new shell afterward to
-refresh PATH. All package managers (`npm`, `pnpm`, `yarn`, `bun`) continue
-working as normal — ringfence only adds shims; it doesn't modify your system
-package managers.
+Removes the PATH entry from `~/.bashrc`, `~/.zshrc`, `~/.profile` and
+deletes `~/.ringfence`. Open a new shell afterward. Package managers
+continue working normally.
 
 ## Limitations
 
-- bwrap masks secrets with `/dev/null`, leaving zero-byte files where the
-  real ones were. Code that _expects_ a missing file (rather than empty)
-  may behave oddly during install.
-- The macOS path syncs results back without deletion semantics, so packages
-  uninstalled during the run linger in `node_modules` until you clear it.
-- Heuristic detection only — files named neither like a secret nor matching
-  the patterns above are not hidden.
-- ~80–150 ms of Node startup overhead per `npm`/`pnpm`/`yarn`/`bun`
-  invocation, including pass-through ones. If this becomes a problem, the
-  shim can be split: bash fast-path for non-install commands, Node for
-  install.
+- bwrap masks secrets with `/dev/null` (zero-byte files). Code that
+  expects a missing file rather than an empty one may behave oddly
+  during install.
+- macOS syncs results without deletion semantics — packages removed
+  during the run stay in `node_modules` until you clear them.
+- ~80–150 ms of Node startup overhead per invocation, including
+  pass-through commands.
+
+## Requirements
+
+- **Node.js ≥ 20**
+- **Linux**: `bubblewrap` (installed automatically)
+- **macOS**: Docker Desktop
+
+## Contributing
+
+```sh
+pnpm install        # installs deps + activates pre-commit hook
+pnpm build          # bundle → dist/
+pnpm test           # node:test suite (runs inside Docker)
+pnpm typecheck      # tsc --noEmit
+pnpm check          # eslint (read-only)
+pnpm fix            # eslint --fix
+```
+
+Contributors need Node ≥ 22.6 (for native TS type stripping in the test
+suite). System prereqs: `ShellCheck` + `shfmt` (used by pre-commit hook).
