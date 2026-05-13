@@ -117,8 +117,8 @@ function originalArgs(pm) {
     }
 
     log('install completed successfully under sandbox.');
-    log('NOTE: the package manager "preinstall errored" message below is EXPECTED —');
-    log('  it stops the outer install from running unsandboxed.');
-    log('  Your node_modules is correctly populated.');
-    process.exit(1);
+    log(
+        'Letting the outer package manager verify — it will see node_modules is up to date and finish.',
+    );
+    process.exit(0);
 })();
