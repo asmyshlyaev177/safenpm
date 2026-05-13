@@ -1,0 +1,55 @@
+# ringfence beta install test — installs from published npm package
+# Tests all package managers: npm, pnpm, yarn, bun
+#
+# Build & run:
+#   docker build -t ringfence-beta-test -f tests/Dockerfile.beta .
+#   docker run --rm --privileged ringfence-beta-test
+
+FROM node:22-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bubblewrap \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install additional package managers
+RUN npm install -g pnpm bun --force
+
+# ---------- npm project ----------
+RUN mkdir -p /projects/npm
+WORKDIR /projects/npm
+RUN npm init -y
+RUN npm install -D ringfence@beta
+RUN npx ringfence
+RUN echo 'SECRET=hunter2' > .env
+
+# ---------- pnpm project ----------
+RUN mkdir -p /projects/pnpm
+WORKDIR /projects/pnpm
+RUN npm init -y
+RUN node -e "const p=require('./package.json'); p.pnpm={onlyBuiltDependencies:['ringfence']}; require('fs').writeFileSync('package.json', JSON.stringify(p,null,2)+'\n')"
+RUN pnpm add -D ringfence@beta 2>&1; test -d node_modules/ringfence && echo "pnpm: ringfence installed" || exit 1; exit 0
+RUN npx ringfence
+RUN echo 'SECRET=hunter2' > .env
+
+# ---------- yarn project ----------
+RUN mkdir -p /projects/yarn
+WORKDIR /projects/yarn
+RUN npm init -y
+RUN yarn add -D ringfence@beta --non-interactive 2>&1
+RUN npx ringfence
+RUN echo 'SECRET=hunter2' > .env
+
+# ---------- bun project ----------
+RUN mkdir -p /projects/bun
+WORKDIR /projects/bun
+RUN bun init -y 2>&1
+RUN bun add -D ringfence@beta 2>&1
+RUN npx ringfence
+RUN echo 'SECRET=hunter2' > .env
+
+# Copy test runner
+COPY tests/docker-beta-test.mjs /test.mjs
+
+WORKDIR /
+CMD ["node", "/test.mjs"]

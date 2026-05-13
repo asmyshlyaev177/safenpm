@@ -92,6 +92,10 @@
   box-shadow: 0 0 30px var(--color-accent-glow);
 }
 
+@utility hero-glow {
+  background: radial-gradient(ellipse at top, var(--color-accent-glow) 0%, transparent 70%);
+}
+
 @utility terminal-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

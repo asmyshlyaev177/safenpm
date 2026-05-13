@@ -1,20 +1,15 @@
 #!/usr/bin/env node
-// ringfence dispatcher.
-//
-// Invoked as:  ringfence <pm> <args...>      where pm is npm|pnpm|yarn|bun
-//
-// Routes install-like subcommands through the platform sandbox (bwrap on
-// Linux, Docker on macOS); everything else execs the real package manager
-// unchanged.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { isInstallLike, isPackageManager } from '../lib/pm.ts';
 import { runLinux } from '../lib/sandbox-linux.ts';
 import { runMacos } from '../lib/sandbox-macos.ts';
 import * as log from '../lib/log.ts';
 
-// console.debug('RINGFENCE')
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(SCRIPT_DIR, '..');
 
 const RINGFENCE_HOME =
     process.env.RINGFENCE_HOME ?? path.join(process.env.HOME ?? '', '.ringfence');
@@ -56,16 +51,46 @@ function execPassthrough(realBin: string, args: readonly string[]): Promise<neve
     });
 }
 
+function ensureSetup(): boolean {
+    if (fs.existsSync(SHIM_DIR)) return true;
+    const installer = path.join(ROOT, 'install.sh');
+    if (!fs.existsSync(installer)) return false;
+    log.info('running first-time setup...');
+    const result = spawnSync(installer, [], { stdio: 'inherit', cwd: ROOT });
+    return result.status === 0;
+}
+
+function ensureInit(): boolean {
+    const pkgPath = path.join(process.cwd(), 'package.json');
+    if (!fs.existsSync(pkgPath)) return false;
+    const target = path.join(process.cwd(), 'scripts', 'ringfence-bootstrap.cjs');
+    if (fs.existsSync(target)) return true;
+    const initScript = path.join(ROOT, 'scripts', 'init.cjs');
+    if (!fs.existsSync(initScript)) return false;
+    log.info('initializing project bootstrap...');
+    const result = spawnSync(process.execPath, [initScript], {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+    });
+    return result.status === 0;
+}
+
 async function main(): Promise<void> {
     const [pmArg, ...args] = process.argv.slice(2);
-    if (!pmArg) {
-        log.err('missing package manager argument');
-        process.exit(2);
+
+    if (!pmArg || pmArg === '--init') {
+        ensureSetup();
+        ensureInit();
+        return;
     }
+
     if (!isPackageManager(pmArg)) {
         log.err(`unsupported package manager: ${pmArg}`);
+        log.info('usage: npx ringfence <npm|pnpm|yarn|bun> [args...]');
         process.exit(2);
     }
+
+    ensureSetup();
 
     const realBin = findRealBinary(pmArg);
     if (!realBin) {
@@ -75,7 +100,7 @@ async function main(): Promise<void> {
 
     if (!isInstallLike(pmArg, args)) {
         await execPassthrough(realBin, args);
-        return; // unreachable; execPassthrough calls process.exit on child exit
+        return;
     }
 
     const workdir = process.cwd();

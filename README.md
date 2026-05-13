@@ -28,40 +28,23 @@ work as usual.
 
 ## Quick start
 
-### Linux
-
 ```sh
-# 1. Make sure you have Node >= 20 (nvm recommended)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-# open a new shell, or:
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-
-nvm install 20 && nvm alias default 20 && nvm use default
-
-# 2. Install ringfence in one command
-npm i -g ringfence
-ringfence-setup
-
-# 3. Activate the shim
-exec $SHELL -l
-which npm   # should print /home/<you>/.ringfence/bin/npm
+npm i -D ringfence
+npx ringfence
 ```
 
-The installer detects your package manager (`apt`, `dnf`, `yum`, `pacman`,
-`zypper`, or `apk`) and installs `bubblewrap` with `sudo` automatically.
+Two commands, same on npm, pnpm, yarn, and bun. Adds ringfence as a dev
+dependency, then auto-detects your OS, installs `bubblewrap` (Linux) or
+validates Docker (macOS), and sets up a `preinstall` hook so every future
+`npm install` in this project runs sandboxed.
 
-### macOS
+<details>
+<summary>macOS prerequisites</summary>
 
-```sh
-# 1. Install Docker Desktop from https://docs.docker.com/desktop/install/mac-install/
-#    and make sure `docker info` succeeds.
+Ringfence on macOS needs <a href="https://docs.docker.com/desktop/install/mac-install/">Docker Desktop</a>
+to run containers. Make sure <code>docker info</code> succeeds before running <code>npx ringfence</code>.
 
-# 2. Install ringfence
-npm i -g ringfence
-ringfence-setup
-exec $SHELL -l
-```
+</details>
 
 ### Verify it works
 
@@ -69,15 +52,47 @@ exec $SHELL -l
 mkdir /tmp/ringfence-check && cd /tmp/ringfence-check
 echo 'SECRET=hunter2' > .env
 echo '{"name":"t","version":"1.0.0"}' > package.json
+npm init -y
+npm i -D ringfence && npx ringfence
+npm install       # should print [ringfence] masking secret: .env
+cat .env          # still readable on the host — sandbox only hid it from npm
+```
+
+Two commands, same on npm, pnpm, yarn, and bun. Adds ringfence as a dev
+dependency, then auto-detects your OS, installs `bubblewrap` (Linux) or
+validates Docker (macOS), and sets up a `preinstall` hook so every future
+`npm install` in this project runs sandboxed.
+
+<details>
+<summary>macOS prerequisites</summary>
+
+Ringfence on macOS needs <a href="https://docs.docker.com/desktop/install/mac-install/">Docker Desktop</a>
+to run containers. Make sure <code>docker info</code> succeeds before running <code>npx ringfence</code>.
+
+</details>
+
+### Verify it works
+
+```sh
+mkdir /tmp/ringfence-check && cd /tmp/ringfence-check
+echo 'SECRET=hunter2' > .env
+echo '{"name":"t","version":"1.0.0"}' > package.json
+npm init -y
+npm i -D ringfence && npx ringfence
 npm install       # should print [ringfence] masking secret: .env
 cat .env          # still readable on the host — sandbox only hid it from npm
 ```
 
 ## How it works
 
-After install, every `npm install`, `pnpm add`, `yarn`, or `bun install`
-automatically routes through the sandbox. Non-install commands (`npm run`,
+Ringfence adds a `preinstall` hook to your project that intercepts install
+commands and routes them through the sandbox. Non-install commands (`npm run`,
 `npm test`, `npx`, etc.) pass through unchanged.
+
+The first `npm install` after adding ringfence triggers setup: it detects
+your OS, installs `bubblewrap` (Linux) or validates Docker (macOS), and
+generates a bootstrap script under `scripts/`. Every subsequent install
+runs inside the sandbox automatically.
 
 **What's sandboxed:**
 

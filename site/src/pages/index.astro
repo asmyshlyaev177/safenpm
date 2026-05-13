@@ -26,7 +26,7 @@ import { SITE_URL } from "../constants";
             href="https://github.com/asmyshlyaev177/ringfence"
             class="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-body transition hover:border-border-strong hover:bg-elevated"
           >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path
                 d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
               />
@@ -43,7 +43,7 @@ import { SITE_URL } from "../constants";
         class="relative overflow-hidden border-b border-border"
       >
         <div
-          class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.65_0.18_50_/_0.08),_transparent_70%)]"
+          class="pointer-events-none absolute inset-0 hero-glow"
         />
         <div
           class="mx-auto max-w-6xl px-6 pt-28 pb-24 text-center"
@@ -78,7 +78,7 @@ import { SITE_URL } from "../constants";
               class="glow-ring inline-flex items-center gap-2 rounded-lg bg-accent px-7 py-3.5 text-sm font-bold text-base uppercase tracking-wider transition hover:bg-accent-hover"
             >
               Get started
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
             </a>
@@ -94,7 +94,7 @@ import { SITE_URL } from "../constants";
             class="mt-14 inline-flex items-center gap-2 rounded-full border border-border bg-surface/50 px-5 py-2"
           >
             <span class="flex h-2 w-2 rounded-full bg-success"></span>
-            <span class="text-xs text-muted">No <code class="font-mono text-xs text-body">sudo</code> required &middot; One-line install &middot; Open source (MIT)</span>
+            <span class="text-xs text-muted">No <code class="font-mono text-xs text-body">sudo</code> required &middot; Local dev dependency &middot; Open source (MIT)</span>
           </div>
         </div>
       </section>
@@ -105,9 +105,9 @@ import { SITE_URL } from "../constants";
           <div
             class="relative rounded-2xl border border-danger-border bg-danger-subtle p-8 md:p-12"
           >
-            <div
-              class="pointer-events-none absolute inset-0 rounded-2xl stripe-bg opacity-50"
-            />
+<div
+          class="pointer-events-none absolute inset-0 hero-glow"
+        />
             <div class="relative">
               <span class="badge badge-danger mb-4">Live threat</span>
               <h2 class="text-3xl font-bold tracking-tight text-danger md:text-4xl">
@@ -159,7 +159,7 @@ import { SITE_URL } from "../constants";
 
             <!-- Arrow connector (desktop) -->
             <div class="hidden items-center justify-center md:flex">
-              <svg class="h-6 w-6 text-border-strong" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <svg class="h-6 w-6 text-border-strong" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
               </svg>
             </div>
@@ -181,7 +181,7 @@ import { SITE_URL } from "../constants";
 
             <!-- Arrow connector (desktop) -->
             <div class="hidden items-center justify-center md:flex">
-              <svg class="h-6 w-6 text-border-strong" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <svg class="h-6 w-6 text-border-strong" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="right" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
               </svg>
             </div>
@@ -282,36 +282,46 @@ import { SITE_URL } from "../constants";
           <div class="text-center">
             <span class="badge badge-warning mb-4">Install</span>
             <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
-              One line. Any shell.
+              Two commands. Any project.
             </h2>
             <p class="mt-3 text-muted">
-              Works on Linux with bubblewrap and macOS with Docker.
+              Install as a dev dependency, then activate. Works with npm, pnpm, yarn, and bun.
             </p>
           </div>
 
-          <div class="terminal-card group mx-auto mt-10 max-w-2xl">
-            <div class="flex items-center gap-2 border-b border-border pb-3">
-              <span class="flex h-3 w-3 rounded-full border border-danger/40"></span>
-              <span class="flex h-3 w-3 rounded-full border border-accent/40"></span>
-              <span class="flex h-3 w-3 rounded-full border border-sandbox/40"></span>
-              <span class="ml-2 text-xs text-muted">terminal</span>
+<div class="terminal-card relative mx-auto mt-10 max-w-2xl">
+            <div class="flex items-center justify-between border-b border-border pb-3">
+              <div class="flex items-center gap-2">
+                <span class="flex h-3 w-3 rounded-full border border-danger/40"></span>
+                <span class="flex h-3 w-3 rounded-full border border-accent/40"></span>
+                <span class="flex h-3 w-3 rounded-full border border-sandbox/40"></span>
+                <span class="ml-2 text-xs text-muted">terminal</span>
+              </div>
+              <button
+                id="copy-btn"
+                class="inline-flex items-center gap-1.5 rounded-md border border-border bg-elevated px-2.5 py-1 text-xs text-muted transition hover:text-body hover:border-border-strong"
+                onclick="var b=this; navigator.clipboard.writeText('npm i -D ringfence'+String.fromCharCode(10)+'npx ringfence'); var s=document.getElementById('copy-status'); b.querySelector('span').textContent='Copied!'; s.textContent='Copied!'; setTimeout(function(){b.querySelector('span').textContent='Copy'; s.textContent=''}, 1500)"
+                aria-label="Copy install command"
+                type="button"
+              >
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                </svg>
+                <span>Copy</span>
+              </button>
             </div>
-            <button
-              id="copy-btn"
-              class="absolute right-3 top-3 rounded-md border border-border bg-elevated px-2.5 py-1 text-xs text-muted opacity-0 transition hover:text-body group-hover:opacity-100"
-              onclick="navigator.clipboard.writeText('curl -fsSL {SITE_URL}/install.sh | sh'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 1500)"
-            >
-              Copy
-            </button>
+            <span class="sr-only" role="status" aria-live="polite" id="copy-status"></span>
             <pre
-              class="group relative mt-4 overflow-x-auto"
-            ><code class="font-mono text-sm leading-relaxed"><span class="text-success">$</span> <span class="text-body">curl -fsSL {SITE_URL}/install.sh</span> | sh</code></pre>
+              class="mt-4 overflow-x-auto"
+            ><code class="font-mono text-sm leading-relaxed"><span class="text-success">$</span> <span class="text-body">npm i -D ringfence</span>
+<span class="text-success">$</span> <span class="text-body">npx ringfence</span></code></pre>
           </div>
 
           <p class="mx-auto mt-6 max-w-xl text-center text-sm text-dim">
-            Requires <code class="rounded bg-surface px-1 font-mono text-xs text-body">bubblewrap</code> on Linux
-            or <code class="rounded bg-surface px-1 font-mono text-xs text-body">Docker</code> on macOS.
-            The installer detects your OS and handles setup automatically.
+            Auto-detects your OS and sets up
+            <code class="rounded bg-surface px-1 font-mono text-xs text-body">bubblewrap</code> (Linux)
+            or <code class="rounded bg-surface px-1 font-mono text-xs text-body">Docker</code> (macOS).
+            Then every <code class="rounded bg-surface px-1 font-mono text-xs text-body">npm install</code> runs sandboxed.
           </p>
         </div>
       </section>
@@ -420,7 +430,7 @@ import { SITE_URL } from "../constants";
           class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center sm:flex-row"
         >
           <p class="text-sm text-dim">
-            ringfence -- MIT license
+            ringfence &middot; MIT license
           </p>
           <div class="flex items-center gap-6 text-sm text-dim">
             <a
@@ -441,13 +451,13 @@ import { SITE_URL } from "../constants";
             >
               Contribute
             </a>
-            <span class="text-dim/50">|</span>
-            <a
-              href="https://github.com/asmyshlyaev177"
-              class="transition hover:text-body"
-            >
-              @asmyshlyaev177
-            </a>
+<span class="text-dim/50">|</span>
+           <a
+             href="https://asmyshlyaev177.dev"
+             class="transition hover:text-body"
+           >
+             by Alexander Smyshlyaev
+           </a>
           </div>
         </div>
       </footer>
