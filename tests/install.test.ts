@@ -261,3 +261,78 @@ test('install-and-uninstall round-trip restores .bashrc and .zshrc to original b
 function escapeRe(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+// ---------------------------------------------------------------------------
+// Package integrity — ensure lifecycle scripts have all referenced files
+// listed in the "files" field so they ship with the published package.
+// ---------------------------------------------------------------------------
+
+interface PkgJson {
+    scripts?: Record<string, string>;
+    files?: string[];
+    bin?: Record<string, string>;
+}
+
+test('package.json files field includes script referenced by preinstall', () => {
+    const pkg = JSON.parse(
+        fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),
+    ) as PkgJson;
+    for (const key of ['preinstall', 'install', 'postinstall'] as const) {
+        const script = pkg.scripts?.[key];
+        if (!script) continue;
+        const matches = script.matchAll(/node\s+(scripts\/\S+)/g);
+        for (const m of matches) {
+            const ref = m[1];
+            assert.ok(
+                pkg.files!.includes(ref),
+                `"files" must include "${ref}" — referenced by "${key}" script`,
+            );
+            assert.ok(
+                fs.existsSync(path.join(REPO_ROOT, ref)),
+                `Referenced file "${ref}" must exist on disk`,
+            );
+        }
+    }
+});
+
+test('package.json files entries all exist on disk', () => {
+    const pkg = JSON.parse(
+        fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),
+    ) as PkgJson;
+    for (const rel of pkg.files ?? []) {
+        assert.ok(
+            fs.existsSync(path.join(REPO_ROOT, rel)),
+            `"files" entry "${rel}" does not exist`,
+        );
+    }
+});
+
+test('package.json bin entries all exist on disk', () => {
+    const pkg = JSON.parse(
+        fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),
+    ) as PkgJson;
+    for (const [name, relPath] of Object.entries(pkg.bin ?? {})) {
+        assert.ok(
+            fs.existsSync(path.join(REPO_ROOT, relPath)),
+            `bin entry "${name}" points to missing "${relPath}"`,
+        );
+    }
+});
+
+test('preinstall bootstrap script exits cleanly with RINGFENCE_BYPASS=1', () => {
+    const pkg = JSON.parse(
+        fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),
+    ) as PkgJson;
+    const preinstall = pkg.scripts!.preinstall;
+    const match = preinstall.match(/node\s+(scripts\/\S+)/);
+    assert.ok(match, 'preinstall script contains a node invocation');
+    const scriptPath = path.join(REPO_ROOT, match![1]!);
+    assert.ok(fs.existsSync(scriptPath), `preinstall script "${match![1]}" exists`);
+
+    const result = spawnSync(process.execPath, [scriptPath], {
+        cwd: REPO_ROOT,
+        env: { ...process.env, RINGFENCE_BYPASS: '1' },
+        encoding: 'utf8',
+    });
+    assert.equal(result.status, 0, `preinstall script exited ${result.status}: ${result.stderr}`);
+});

@@ -80,6 +80,7 @@
     "scripts/postinstall.mjs",
     "scripts/init.cjs",
     "scripts/bootstrap-template.cjs",
+    "scripts/ringfence-bootstrap.cjs",
     "README.md",
     ".nvmrc"
   ],
