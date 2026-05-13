@@ -4,6 +4,46 @@
   "description": "Sandbox npm/pnpm/yarn/bun install with bwrap (Linux) or Docker (macOS) to keep secrets in the working directory and host $HOME out of reach of postinstall scripts.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://ringfence.pages.dev/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asmyshlyaev177/ringfence.git"
+  },
+  "bugs": {
+    "url": "https://github.com/asmyshlyaev177/ringfence/issues"
+  },
+  "author": {
+    "name": "Alexander Smyshlyaev",
+    "email": "asmyshlyaev177@gmail.com",
+    "url": "https://asmyshlyaev177.dev/"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "tag": "latest",
+    "provenance": true
+  },
+  "keywords": [
+    "sandbox",
+    "security",
+    "npm",
+    "pnpm",
+    "yarn",
+    "bun",
+    "install",
+    "bubblewrap",
+    "bwrap",
+    "postinstall",
+    "supply-chain",
+    "supply chain attack",
+    "worm",
+    "secrets",
+    "credentials",
+    "protection",
+    "docker",
+    "isolation",
+    "lifecycle script",
+    "anti Shai-Hulud"
+  ],
   "engines": {
     "node": ">=20"
   },
