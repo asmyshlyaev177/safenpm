@@ -58,7 +58,7 @@ export default tseslint.config(
     },
     // MJS files not in tsconfig need process/console globals.
     {
-        files: ['scripts/build.mjs', 'tests/docker-beta-test.mjs'],
+        files: ['scripts/build.mjs', 'scripts/postinstall.mjs', 'tests/docker-beta-test.mjs'],
         languageOptions: {
             globals: {
                 process: 'readonly',
