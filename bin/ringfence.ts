@@ -121,10 +121,14 @@ async function main(): Promise<void> {
 
     switch (process.platform) {
         case 'linux':
-            await runLinux(sandboxOpts);
+            if (process.env.RINGFENCE_FORCE_DOCKER) {
+                process.exit(await runMacos(sandboxOpts));
+            } else {
+                await runLinux(sandboxOpts);
+            }
             break;
         case 'darwin':
-            await runMacos(sandboxOpts);
+            process.exit(await runMacos(sandboxOpts));
             break;
         default:
             log.err(`unsupported platform: ${process.platform}`);

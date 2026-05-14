@@ -82,6 +82,7 @@
     "postinstall": "node scripts/postinstall.mjs",
     "test": "if [ ! -f /.dockerenv ] && [ -z \"$CI\" ]; then echo 'ERROR: Tests modify host files under $HOME and MUST run inside Docker.'; echo '  Run: npm run test:docker'; echo '  Or: docker build -t ringfence-test -f tests/Dockerfile . && docker run --rm --privileged ringfence-test'; exit 1; fi && node --experimental-strip-types --test 'tests/**/*.test.ts'",
     "test:docker": "docker build -t ringfence-test -f tests/Dockerfile . && docker run --rm --privileged ringfence-test",
+    "test:macos": "docker build -t ringfence-test-macos -f tests/Dockerfile.macos . && docker run --rm --privileged ringfence-test-macos",
     "typecheck": "tsc --noEmit",
     "check": "eslint .",
     "fix": "eslint . --fix",

@@ -1,0 +1,41 @@
+# macOS sandbox E2E test runner.
+# Runs ringfence's macOS Docker-based sandbox path inside a Docker-in-Docker
+# container so `runMacos()` can spawn inner Docker containers for isolation.
+#
+# Build & run:
+#   docker build -t ringfence-test-macos -f tests/Dockerfile.macos .
+#   docker run --rm --privileged ringfence-test-macos
+#
+# Or use the npm script:
+#   pnpm run test:macos
+
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    docker.io \
+    iptables \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 22
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g pnpm --force
+
+WORKDIR /ringfence
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
+
+COPY . .
+
+RUN pnpm build
+
+ENV RINGFENCE_FORCE_DOCKER=1
+
+COPY tests/entrypoint-macos.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

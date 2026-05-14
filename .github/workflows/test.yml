@@ -24,10 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Build Docker image
-        run: docker build -t ringfence-test -f tests/Dockerfile .
-      - name: Run tests
-        run: docker run --rm --privileged ringfence-test
+      - uses: pnpm/action-setup@v6
+      - run: pnpm run test:docker
 
   test-separate:
     runs-on: ubuntu-latest
@@ -40,3 +38,10 @@ jobs:
         run: docker build -t ringfence-test -f tests/Dockerfile .
       - name: Run tests for ${{ matrix.pm }}
         run: docker run --rm --privileged ringfence-test pnpm run test -- --test-name-pattern='${{ matrix.pm }}:'
+
+  test-macos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - run: pnpm run test:macos

@@ -15,12 +15,12 @@ export type SandboxOpts = {
     ringfenceHome: string;
 };
 
-const NODE_IMAGE = process.env.RINGFENCE_NODE_IMAGE ?? 'node:lts';
-const BUN_IMAGE = process.env.RINGFENCE_BUN_IMAGE ?? 'oven/bun:latest';
+export const NODE_IMAGE = process.env.RINGFENCE_NODE_IMAGE ?? 'node:lts';
+export const BUN_IMAGE = process.env.RINGFENCE_BUN_IMAGE ?? 'oven/bun:latest';
 
 const PM_AUX_EXCLUDES: ReadonlySet<string> = new Set(['.npmrc', '.yarnrc', '.yarnrc.yml']);
 
-function dockerAvailable(): boolean {
+export function dockerAvailable(): boolean {
     const dirs = (process.env.PATH ?? '').split(':');
     return dirs.some((d) => {
         if (!d) return false;
@@ -35,7 +35,7 @@ function dockerAvailable(): boolean {
 
 // fs.cp filter: return false to skip a path. Skips secret-named files but
 // keeps all directories (we still want to recurse into them).
-function makeCopyFilter(rejectAuxConfig: boolean): (src: string) => boolean {
+export function makeCopyFilter(rejectAuxConfig: boolean): (src: string) => boolean {
     return (src: string): boolean => {
         const name = path.basename(src);
         if (isSecretFilename(name)) return false;
@@ -44,7 +44,7 @@ function makeCopyFilter(rejectAuxConfig: boolean): (src: string) => boolean {
     };
 }
 
-export async function runMacos(opts: SandboxOpts): Promise<never> {
+export async function runMacos(opts: SandboxOpts): Promise<number> {
     if (!dockerAvailable()) {
         log.err('docker not installed. Install Docker Desktop for macOS.');
         process.exit(1);
@@ -61,7 +61,7 @@ export async function runMacos(opts: SandboxOpts): Promise<never> {
         await fsp.cp(workdir, staging, {
             recursive: true,
             filter: makeCopyFilter(false),
-            // Preserve mtimes so package managers' caching heuristics work.
+            verbatimSymlinks: true,
             preserveTimestamps: true,
         });
 
@@ -102,10 +102,15 @@ export async function runMacos(opts: SandboxOpts): Promise<never> {
         const containerCmd = composeContainerCmd(pm, pmArgs);
 
         log.info(`running ${pm} ${pmArgs.join(' ')} in docker (${image})`);
+        const uid = process.getuid?.();
+        const gid = process.getgid?.();
+        const userArgs: string[] =
+            uid !== undefined && gid !== undefined ? ['--user', `${uid}:${gid}`] : [];
         exitCode = await spawnAndWait('docker', [
             'run',
             '--rm',
             '-i',
+            ...userArgs,
             '-v',
             `${staging}:/work`,
             '-w',
@@ -126,18 +131,25 @@ export async function runMacos(opts: SandboxOpts): Promise<never> {
         log.info(`syncing results back to ${workdir}`);
         await fsp.cp(staging, workdir, {
             recursive: true,
+            verbatimSymlinks: true,
             filter: makeCopyFilter(true),
             force: true,
             preserveTimestamps: true,
         });
     } finally {
-        await fsp.rm(staging, { recursive: true, force: true });
+        try {
+            await fsp.rm(staging, { recursive: true, force: true });
+        } catch {
+            // Staging dir may contain root-owned files from the container.
+            // The OS will clean up /tmp eventually.
+            log.warn(`could not clean up staging dir ${staging}`);
+        }
     }
 
-    process.exit(exitCode);
+    return exitCode;
 }
 
-function composeContainerCmd(pm: PackageManager, args: readonly string[]): string {
+export function composeContainerCmd(pm: PackageManager, args: readonly string[]): string {
     const quoted = args.map(shellQuote).join(' ');
     switch (pm) {
         case 'npm':
@@ -151,13 +163,12 @@ function composeContainerCmd(pm: PackageManager, args: readonly string[]): strin
     }
 }
 
-// Minimal POSIX-shell single-quote escape.
-function shellQuote(s: string): string {
+export function shellQuote(s: string): string {
     if (/^[A-Za-z0-9_\-./=:@%+,]+$/.test(s)) return s;
     return `'${s.replace(/'/g, `'\\''`)}'`;
 }
 
-function spawnAndWait(cmd: string, args: readonly string[]): Promise<number> {
+export function spawnAndWait(cmd: string, args: readonly string[]): Promise<number> {
     return new Promise((resolve, reject) => {
         const child = spawn(cmd, [...args], { stdio: 'inherit' });
         child.on('error', reject);
