@@ -31,5 +31,7 @@ RUN pnpm build
 
 RUN ./install.sh
 
+ENV PATH="/root/.ringfence/bin:${PATH}"
+
 # Run root tests (login shell so .profile sets PATH)
 CMD ["/bin/bash", "-lc", "pnpm run test"]

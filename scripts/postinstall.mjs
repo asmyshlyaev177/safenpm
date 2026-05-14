@@ -1,9 +1,15 @@
 import { execSync } from 'node:child_process';
 import { resolve, dirname } from 'node:path';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const installer = resolve(root, 'install.sh');
+const dist = resolve(root, 'dist', 'ringfence.mjs');
+
+if (!existsSync(dist)) {
+    process.exit(0);
+}
 
 function detectPM() {
     const ua = process.env.npm_config_user_agent || '';
