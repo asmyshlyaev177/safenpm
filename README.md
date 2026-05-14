@@ -3,7 +3,6 @@
 <div align="center">
 
 [![npm](https://img.shields.io/npm/v/ringfence.svg)](https://www.npmjs.com/package/ringfence)
-![npm bundle size](https://img.shields.io/bundlephobia/minzip/ringfence.svg)
 ![Tests](https://github.com/asmyshlyaev177/ringfence/actions/workflows/test.yml/badge.svg?branch=main)
 
 </div>
