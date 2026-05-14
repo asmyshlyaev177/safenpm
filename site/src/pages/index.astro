@@ -4,8 +4,8 @@ import { SITE_URL, VERSION } from "../constants";
 ---
 
 <Layout
-  title="ringfence: sandbox npm install from supply-chain worms"
-  description="Sandbox npm, pnpm, yarn, and bun installs with bwrap. Keep SSH keys, cloud credentials, and .env files hidden from malicious postinstall scripts. No config."
+  title="ringfence: prevent postinstall scripts from stealing your secrets"
+  description="Prevent npm, pnpm, yarn, and bun postinstall scripts from stealing SSH keys, cloud credentials, and .env files. Compromised packages install normally — they just can't see your secrets. No config."
 >
   <div class="stripe-bg min-h-screen">
     <!-- Header -->
@@ -58,7 +58,7 @@ import { SITE_URL, VERSION } from "../constants";
           >
             Install packages.
             <br />
-            <span class="text-accent">Not threats.</span>
+            <span class="text-accent">Keep your secrets.</span>
           </h1>
 
           <p
@@ -67,8 +67,9 @@ import { SITE_URL, VERSION } from "../constants";
             ringfence runs <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">npm install</code>,
             <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">pnpm add</code>, and friends
             inside a lightweight
-            <strong class="text-body">bwrap sandbox</strong>. Your SSH keys, cloud credentials, and
-            <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">.env</code> files stay yours. No
+            <strong class="text-body">bwrap sandbox</strong>. Even if you install a compromised package, its
+            postinstall scripts can't steal what they can't see — SSH keys, cloud credentials, and
+            <code class="rounded bg-elevated px-1.5 py-0.5 font-mono text-sm text-body">.env</code> files stay hidden. No
             allowlists. No daemon. No config.
           </p>
 
@@ -119,8 +120,8 @@ import { SITE_URL, VERSION } from "../constants";
                 It spread undetected because it looked legitimate.
               </p>
               <p class="mt-3 max-w-3xl text-base leading-relaxed text-body">
-                ringfence stops this class of attack at the OS level. Postinstall scripts run in a sandbox where
-                your secrets simply do not exist.
+                ringfence stops this class of attack at the OS level. Compromised packages still install — they
+                just can't steal anything. Postinstall scripts run in a sandbox where your secrets simply do not exist.
               </p>
             </div>
           </div>
@@ -136,7 +137,7 @@ import { SITE_URL, VERSION } from "../constants";
               Three layers of protection
             </h2>
             <p class="mt-3 text-muted">
-              From shell shim to kernel sandbox, nothing changes in your workflow.
+              From shell shim to kernel sandbox, nothing changes — except that your secrets stay safe.
             </p>
           </div>
 
@@ -332,7 +333,7 @@ import { SITE_URL, VERSION } from "../constants";
           <div class="text-center">
             <span class="badge badge-danger mb-4">Protected</span>
             <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
-              What ringfence hides
+              Secrets ringfence protects
             </h2>
             <p class="mt-3 text-muted">
               Every install runs in a clean room. These never reach postinstall scripts.

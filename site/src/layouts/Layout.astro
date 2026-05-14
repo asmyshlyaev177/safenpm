@@ -11,7 +11,7 @@ export interface Props {
 
 const {
   title,
-  description = "Sandbox npm/pnpm/yarn/bun installs with bwrap. Keep SSH keys, cloud credentials, and .env files out of reach of malicious postinstall scripts.",
+  description = "Prevent postinstall scripts from stealing your secrets. Compromised packages install normally — but SSH keys, cloud credentials, and .env files stay hidden inside a bwrap sandbox.",
   image = "/og-default.png",
   canonical = SITE_URL,
 } = Astro.props;
@@ -41,14 +41,14 @@ const imageUrl = new URL(image, canonical).href;
     <meta property="og:image" content={imageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="ringfence — sandbox your package installs from supply-chain attacks" />
+    <meta property="og:image:alt" content="ringfence — prevent postinstall scripts from stealing your secrets" />
     <meta property="og:locale" content="en_US" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={siteTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
-    <meta name="twitter:image:alt" content="ringfence — sandbox your package installs from supply-chain attacks" />
+    <meta name="twitter:image:alt" content="ringfence — prevent postinstall scripts from stealing your secrets" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -63,9 +63,9 @@ const imageUrl = new URL(image, canonical).href;
       applicationCategory: "DeveloperApplication",
       applicationSubCategory: "SecurityTool",
       operatingSystem: "Linux, macOS",
-      description: "Sandbox npm/pnpm/yarn/bun installs with bwrap (Linux) or Docker (macOS) to keep secrets out of reach of postinstall scripts.",
+      description: "Prevent postinstall scripts from stealing secrets during npm/pnpm/yarn/bun installs. Uses bwrap (Linux) or Docker (macOS) to sandbox installs. Compromised packages can't exfiltrate what they can't see.",
       url: SITE_URL,
-      keywords: "npm security, supply chain security, sandbox npm install, bubblewrap, postinstall protection, open source security",
+      keywords: "prevent secrets theft, npm security, supply chain security, sandbox npm install, bubblewrap, postinstall protection, exfiltration protection, open source security",
       softwareVersion: VERSION,
       offers: {
         "@type": "Offer",
