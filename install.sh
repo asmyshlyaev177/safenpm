@@ -167,20 +167,16 @@ case "$PLATFORM" in
     macos) check_docker_macos ;;
 esac
 
-# Locate the dispatcher bundles. The build emits both ESM (.mjs) and CJS
-# (.cjs); we ship both so the package can be loaded either way. The shim
-# invokes the ESM bundle by default (matches the source style and Node 20+
-# ESM startup is on par with CJS).
+# Locate the dispatcher bundle.
 DIST_MJS="$SRC_DIR/dist/ringfence.mjs"
-DIST_CJS="$SRC_DIR/dist/ringfence.cjs"
-if [ ! -f "$DIST_MJS" ] || [ ! -f "$DIST_CJS" ]; then
-    err "dispatcher bundles not found in $SRC_DIR/dist/"
+if [ ! -f "$DIST_MJS" ]; then
+    err "dispatcher bundle not found in $SRC_DIR/dist/"
     cat >&2 <<'EOF'
 
 Build the dispatcher before running install.sh from a repo checkout:
 
   pnpm install
-  pnpm build       # produces dist/ringfence.{mjs,cjs}
+  pnpm build       # produces dist/ringfence.mjs
 
 If you installed via `npm i -g ringfence` and still hit this, please file
 a bug — dist/ should ship in the published tarball.
@@ -190,12 +186,10 @@ fi
 
 log "installing into $RINGFENCE_HOME"
 mkdir -p "$SHIM_DIR" "$LIB_DIR"
-for ext in mjs cjs; do
-    install -m 0755 "$SRC_DIR/dist/ringfence.$ext" "$SHIM_DIR/ringfence.$ext"
-    if [ -f "$SRC_DIR/dist/ringfence.$ext.map" ]; then
-        install -m 0644 "$SRC_DIR/dist/ringfence.$ext.map" "$SHIM_DIR/ringfence.$ext.map"
-    fi
-done
+install -m 0755 "$SRC_DIR/dist/ringfence.mjs" "$SHIM_DIR/ringfence.mjs"
+if [ -f "$SRC_DIR/dist/ringfence.mjs.map" ]; then
+    install -m 0644 "$SRC_DIR/dist/ringfence.mjs.map" "$SHIM_DIR/ringfence.mjs.map"
+fi
 install -m 0644 "$SRC_DIR/lib/rcedit.sh" "$LIB_DIR/rcedit.sh"
 install -m 0755 "$SRC_DIR/uninstall.sh" "$RINGFENCE_HOME/uninstall.sh"
 

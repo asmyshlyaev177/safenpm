@@ -29,8 +29,7 @@ COPY . .
 # Build the ringfence bundles
 RUN pnpm build
 
-# Install site dependencies (Astro, Tailwind)
-RUN cd site && pnpm install --no-frozen-lockfile --ignore-scripts
+RUN ./install.sh
 
-# Run root tests then site tests
-CMD ["sh", "-c", "pnpm run test && cd site && pnpm test"]
+# Run root tests (login shell so .profile sets PATH)
+CMD ["/bin/bash", "-lc", "pnpm run test"]

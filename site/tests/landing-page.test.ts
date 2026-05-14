@@ -22,15 +22,14 @@ test('site builds, contains expected sections, and links CSS', () => {
     const html = fs.readFileSync(INDEX_HTML, 'utf8');
 
     assert.match(html, /Install packages/);
-    assert.match(html, /Not threats/);
+    assert.match(html, /Live threat/);
     assert.match(html, /TanStack supply-chain worm/);
     assert.match(html, /bwrap sandbox/);
     assert.match(html, /npm install.*express/);
     assert.match(html, /pnpm add.*zod/);
     assert.match(html, /yarn add.*react/);
 assert.match(html, /bun add.*@hono\/hono/);
-    assert.match(html, /npm i -D ringfence/);
-    assert.match(html, /npx ringfence/);
+    assert.match(html, /npm i -D ringfence && npx ringfence-setup/);
     assert.match(html, /MIT license/);
     assert.match(html, /<link rel="stylesheet" href="\/_astro\/index\.[^"]+\.css">/);
 });

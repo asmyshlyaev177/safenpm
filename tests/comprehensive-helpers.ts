@@ -56,17 +56,8 @@ export function probeVal(p: ProbeResult | string | string[] | null): ProbeResult
     return p as ProbeResult;
 }
 
-export async function createShimDir(ringfenceHome: string): Promise<string> {
-    const shimDir = path.join(ringfenceHome, 'bin');
-    await fsp.mkdir(shimDir, { recursive: true });
-    await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
-    await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
-    for (const pm of PACKAGE_MANAGERS) {
-        const shim = path.join(shimDir, pm);
-        await fsp.writeFile(shim, `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`);
-        await fsp.chmod(shim, 0o755);
-    }
-    return shimDir;
+export async function createShimDir(): Promise<string> {
+    return path.join(process.env.HOME!, '.ringfence', 'bin');
 }
 
 export async function createProject(workdir: string, pm: string): Promise<void> {
@@ -108,11 +99,10 @@ await fsp.mkdir(workdir, { recursive: true });
     await fsp.writeFile(path.join(workdir, 'package.json'), JSON.stringify(pkg, null, 2));
 }
 
-export function runInstall(workdir: string, ringfenceHome: string, shimDir: string, pm: string): Results {
+export function runInstall(workdir: string, pm: string): Results {
     const env: Record<string, string> = {
         ...process.env,
-        PATH: `${shimDir}:${process.env.PATH}`,
-        RINGFENCE_HOME: ringfenceHome,
+        PATH: `${process.env.HOME}/.ringfence/bin:${process.env.PATH}`,
         AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
         AWS_SESSION_TOKEN: 'IQoJb3JpZ2luX2VY-mock',
         NPM_TOKEN: 'npm_planted_leak',

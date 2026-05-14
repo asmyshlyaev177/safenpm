@@ -1,6 +1,6 @@
 {
   "name": "ringfence",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "description": "Sandbox npm/pnpm/yarn/bun install with bwrap (Linux) or Docker (macOS) to keep secrets in the working directory and host $HOME out of reach of postinstall scripts.",
   "type": "module",
   "license": "MIT",
@@ -57,44 +57,35 @@
   "bin": {
     "ringfence": "dist/ringfence.mjs",
     "ringfence-setup": "install.sh",
-    "ringfence-uninstall": "uninstall.sh",
-    "ringfence-init": "scripts/init.cjs"
+    "ringfence-uninstall": "uninstall.sh"
   },
-  "main": "dist/ringfence.cjs",
   "module": "dist/ringfence.mjs",
   "exports": {
     ".": {
-      "import": "./dist/ringfence.mjs",
-      "require": "./dist/ringfence.cjs"
+      "import": "./dist/ringfence.mjs"
     },
     "./dist/*": "./dist/*"
   },
   "files": [
     "dist/ringfence.mjs",
     "dist/ringfence.mjs.map",
-    "dist/ringfence.cjs",
-    "dist/ringfence.cjs.map",
     "install.sh",
     "uninstall.sh",
     "lib/rcedit.sh",
     "scripts/postinstall.mjs",
-    "scripts/init.cjs",
-    "scripts/bootstrap-template.cjs",
-    "scripts/ringfence-bootstrap.cjs",
     "README.md",
     ".nvmrc"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepack": "node scripts/build.mjs",
+    "postinstall": "node scripts/postinstall.mjs",
     "test": "if [ ! -f /.dockerenv ] && [ -z \"$CI\" ]; then echo 'ERROR: Tests modify host files under $HOME and MUST run inside Docker.'; echo '  Run: npm run test:docker'; echo '  Or: docker build -t ringfence-test -f tests/Dockerfile . && docker run --rm --privileged ringfence-test'; exit 1; fi && node --experimental-strip-types --test 'tests/**/*.test.ts'",
     "test:docker": "docker build -t ringfence-test -f tests/Dockerfile . && docker run --rm --privileged ringfence-test",
     "typecheck": "tsc --noEmit",
     "check": "eslint .",
     "fix": "eslint . --fix",
-    "prepare": "test -d .git && husky || true",
-    "postinstall": "node scripts/postinstall.mjs",
-    "preinstall": "node scripts/ringfence-bootstrap.cjs"
+    "prepare": "test -d .git && husky || true"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

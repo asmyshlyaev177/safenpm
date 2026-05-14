@@ -283,25 +283,44 @@ import { SITE_URL, VERSION } from "../constants";
           <div class="text-center">
             <span class="badge badge-warning mb-4">Install</span>
             <h2 class="text-3xl font-bold tracking-tight md:text-4xl">
-              Two commands. Any project.
+              One command. Any project.
             </h2>
             <p class="mt-3 text-muted">
-              Install as a dev dependency, then activate. Works with npm, pnpm, yarn, and bun.
+              Install as a dev dependency &mdash; setup runs automatically. Works with npm, pnpm, yarn, and bun.
             </p>
           </div>
 
-<div class="terminal-card relative mx-auto mt-10 max-w-2xl">
+          <div class="terminal-card relative mx-auto mt-10 max-w-2xl">
             <div class="flex items-center justify-between border-b border-border pb-3">
-              <div class="flex items-center gap-2">
-                <span class="flex h-3 w-3 rounded-full border border-danger/40"></span>
-                <span class="flex h-3 w-3 rounded-full border border-accent/40"></span>
-                <span class="flex h-3 w-3 rounded-full border border-sandbox/40"></span>
-                <span class="ml-2 text-xs text-muted">terminal</span>
+              <div class="flex items-center gap-1.5" role="tablist" aria-label="Package manager">
+                <button
+                  class="pm-tab rounded-md px-3 py-1 text-xs font-medium transition"
+                  data-pm="npm"
+                  role="tab"
+                  aria-selected="true"
+                >npm</button>
+                <button
+                  class="pm-tab rounded-md px-3 py-1 text-xs font-medium transition"
+                  data-pm="pnpm"
+                  role="tab"
+                  aria-selected="false"
+                >pnpm</button>
+                <button
+                  class="pm-tab rounded-md px-3 py-1 text-xs font-medium transition"
+                  data-pm="yarn"
+                  role="tab"
+                  aria-selected="false"
+                >yarn</button>
+                <button
+                  class="pm-tab rounded-md px-3 py-1 text-xs font-medium transition"
+                  data-pm="bun"
+                  role="tab"
+                  aria-selected="false"
+                >bun</button>
               </div>
               <button
                 id="copy-btn"
                 class="inline-flex items-center gap-1.5 rounded-md border border-border bg-elevated px-2.5 py-1 text-xs text-muted transition hover:text-body hover:border-border-strong"
-                onclick="var b=this; navigator.clipboard.writeText('npm i -D ringfence'+String.fromCharCode(10)+'npx ringfence'); var s=document.getElementById('copy-status'); b.querySelector('span').textContent='Copied!'; s.textContent='Copied!'; setTimeout(function(){b.querySelector('span').textContent='Copy'; s.textContent=''}, 1500)"
                 aria-label="Copy install command"
                 type="button"
               >
@@ -312,10 +331,9 @@ import { SITE_URL, VERSION } from "../constants";
               </button>
             </div>
             <span class="sr-only" role="status" aria-live="polite" id="copy-status"></span>
-            <pre
-              class="mt-4 overflow-x-auto"
-            ><code class="font-mono text-sm leading-relaxed"><span class="text-success">$</span> <span class="text-body">npm i -D ringfence</span>
-<span class="text-success">$</span> <span class="text-body">npx ringfence</span></code></pre>
+            <div id="cmd-panel" class="mt-4">
+              <pre class="overflow-x-auto"><code class="font-mono text-sm leading-relaxed"><span class="text-success">$</span> <span class="text-body" id="cmd-text">npm i -D ringfence && npx ringfence-setup</span></code></pre>
+            </div>
           </div>
 
           <p class="mx-auto mt-6 max-w-xl text-center text-sm text-dim">
@@ -326,6 +344,45 @@ import { SITE_URL, VERSION } from "../constants";
           </p>
         </div>
       </section>
+
+      <script is:inline>
+        const pms = {
+          npm:  { add: "npm i -D", setup: "npx" },
+          pnpm: { add: "pnpm add -D", setup: "pnpm exec" },
+          yarn: { add: "yarn add -D", setup: "yarn" },
+          bun:  { add: "bun add -d", setup: "bunx" },
+        };
+        function cmd(pm) { return `${pms[pm].add} ringfence && ${pms[pm].setup} ringfence-setup`; }
+        let active = "npm";
+
+        const tabs = document.querySelectorAll(".pm-tab");
+        const cmdText = document.getElementById("cmd-text");
+        const copyBtn = document.getElementById("copy-btn");
+
+        function selectTab(pm) {
+          active = pm;
+          cmdText.textContent = cmd(pm);
+          tabs.forEach(t => {
+            t.setAttribute("aria-selected", t.dataset.pm === pm ? "true" : "false");
+          });
+        }
+
+        tabs.forEach(tab => {
+          tab.addEventListener("click", () => selectTab(tab.dataset.pm));
+        });
+
+        copyBtn.addEventListener("click", () => {
+          navigator.clipboard.writeText(cmd(active));
+          const span = copyBtn.querySelector("span");
+          const status = document.getElementById("copy-status");
+          span.textContent = "Copied!";
+          status.textContent = "Copied!";
+          setTimeout(() => {
+            span.textContent = "Copy";
+            status.textContent = "";
+          }, 1500);
+        });
+      </script>
 
       <!-- What's protected -->
       <section class="border-b border-border">

@@ -34,19 +34,6 @@ for (const pm of PACKAGE_MANAGERS) {
         continue;
     }
 
-    // Verify bootstrap template
-    test(`${pm}: bootstrap template exists`, () => {
-        const p = `${project}/scripts/ringfence-bootstrap.cjs`;
-        if (!existsSync(p)) throw new Error(`not found: ${p}`);
-    });
-
-    // Verify preinstall hook
-    test(`${pm}: preinstall hook in package.json`, () => {
-        const pkg = JSON.parse(readFileSync(`${project}/package.json`, 'utf8'));
-        if (!pkg.scripts?.preinstall?.includes('ringfence-bootstrap'))
-            throw new Error('preinstall hook missing');
-    });
-
     // Verify bundle resolvable
     test(`${pm}: bundle resolvable`, () => {
         try {

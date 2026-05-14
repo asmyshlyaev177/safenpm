@@ -4,10 +4,8 @@
 // prefix when -g / --global is detected, so binary packages can be
 // installed and their CLI entry points work after the sandbox exits.
 //
-// Test isolation:
-//   - A self-contained shim is built in a tempdir per test run.
-//   - The bundle at dist/ringfence.mjs must exist (run pnpm build first).
-//   - bwrap must be installed (Linux only).
+// The real shims at ~/.ringfence/bin/ are set up by install.sh in the
+// Docker image and are already on PATH.
 
 import { test } from 'node:test';
 import * as assert from 'node:assert/strict';
@@ -20,7 +18,6 @@ import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(REPO_ROOT, 'dist/ringfence.mjs');
-const PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const;
 
 function hasBwrap(): boolean {
     try {
@@ -61,43 +58,24 @@ test(
     `global install: ${TEST_PKG} installs and its binary works`,
     { skip: skipReason },
     async () => {
-        const testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-global-'));
-        const ringfenceHome = path.join(testRoot, 'ringfence');
-        const shimDir = path.join(ringfenceHome, 'bin');
         const prefix = nodePrefix();
 
         try {
-            // 1. Set up an isolated shim directory (same pattern as security.test.ts).
-            await fsp.mkdir(shimDir, { recursive: true });
-            await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
-            await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
-            for (const pm of PACKAGE_MANAGERS) {
-                const shim = path.join(shimDir, pm);
-                await fsp.writeFile(
-                    shim,
-                    `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`,
-                );
-                await fsp.chmod(shim, 0o755);
-            }
-
-            const env = {
-                ...process.env,
-                RINGFENCE_HOME: ringfenceHome,
-                PATH: `${shimDir}:${process.env.PATH}`,
-                // Plant secret env vars to ensure the sandbox doesn't break
-                // global installs while still stripping secrets inside.
-                AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
-                NPM_TOKEN: 'npm_planted_leak',
-            };
-
-            // 2. Uninstall first to ensure a clean state.
+            // 1. Uninstall first to ensure a clean state.
             try {
                 execFileSync('npm', ['uninstall', '-g', TEST_PKG], { stdio: 'pipe' });
             } catch {
                 // not installed, that's fine
             }
 
-            // 3. Run global install through the ringfence shim.
+            // 2. Run global install through the real ringfence shim on PATH.
+            const env = {
+                ...process.env,
+                // Plant secret env vars to ensure the sandbox doesn't break
+                // global installs while still stripping secrets inside.
+                AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
+                NPM_TOKEN: 'npm_planted_leak',
+            };
             execFileSync('npm', ['i', '-g', TEST_PKG], { env, stdio: 'pipe' });
 
             // 4. Verify the binary symlink exists in the node prefix.
@@ -115,13 +93,12 @@ test(
             });
             assert.ok(output.trim().length > 0, `${TEST_PKG} --version should produce output`);
         } finally {
-            // 6. Clean up: uninstall the test package and remove temp dir.
+            // 6. Clean up: uninstall the test package.
             try {
                 execFileSync('npm', ['uninstall', '-g', TEST_PKG], { stdio: 'pipe' });
             } catch {
                 // ignore cleanup errors
             }
-            await fsp.rm(testRoot, { recursive: true, force: true });
         }
     },
 );
@@ -131,44 +108,21 @@ test(
     { skip: skipReason },
     async () => {
         const testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-global-'));
-        const ringfenceHome = path.join(testRoot, 'ringfence');
-        const shimDir = path.join(ringfenceHome, 'bin');
         const prefix = nodePrefix();
 
         try {
-            // 1. Set up shim.
-            await fsp.mkdir(shimDir, { recursive: true });
-            await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
-            await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
-            for (const pm of PACKAGE_MANAGERS) {
-                const shim = path.join(shimDir, pm);
-                await fsp.writeFile(
-                    shim,
-                    `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`,
-                );
-                await fsp.chmod(shim, 0o755);
-            }
-
-            const env = {
-                ...process.env,
-                RINGFENCE_HOME: ringfenceHome,
-                PATH: `${shimDir}:${process.env.PATH}`,
-                AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
-                NPM_TOKEN: 'npm_planted_leak',
-            };
-
-            // 2. Uninstall any leftover.
+            // 1. Uninstall any leftover.
             try {
                 execFileSync('npm', ['uninstall', '-g', TEST_PKG], { stdio: 'pipe' });
             } catch {
                 // not installed
             }
 
-            // 3. Global install through shim.
-            execFileSync('npm', ['i', '-g', TEST_PKG], { env, stdio: 'pipe' });
+            // 2. Global install through real shim.
+            execFileSync('npm', ['i', '-g', TEST_PKG], { stdio: 'pipe' });
 
-            // 4. Create a separate project directory and run a local install
-            //    using the REAL npm (no shim on PATH).
+            // 3. Create a separate project directory and run a local install
+            //    using the REAL npm (no ringfence shim on PATH).
             const projectDir = path.join(testRoot, 'other-project');
             await fsp.mkdir(projectDir);
             await fsp.writeFile(
@@ -183,7 +137,10 @@ test(
 
             // Run npm install WITHOUT the ringfence shim in PATH
             // to verify the real npm still works after the global sandboxed install.
-            const realPath = process.env.PATH;
+            const realPath = (process.env.PATH ?? '')
+                .split(':')
+                .filter((d) => !d.includes('.ringfence'))
+                .join(':');
             execFileSync('npm', ['install', '--package-lock-only'], {
                 cwd: projectDir,
                 env: { ...process.env, PATH: realPath },

@@ -79,33 +79,19 @@ const suiteOpts = skipReason ? { skip: skipReason } : {};
 describe('security: third-party install scripts cannot leak secrets', suiteOpts, () => {
     let testRoot: string;
     let workdir: string;
-    let shimDir: string;
     let envEnvFileBefore: string;
     let results: Results;
 
     before(async () => {
-        // 1. Sandbox state: a fresh shim dir + bundle copy, isolated from the
-        //    user's installed ~/.ringfence.
-        testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-sec-'));
-        const ringfenceHome = path.join(testRoot, 'ringfence');
-        shimDir = path.join(ringfenceHome, 'bin');
-        await fsp.mkdir(shimDir, { recursive: true });
-        await fsp.copyFile(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
-        await fsp.chmod(path.join(shimDir, 'ringfence.mjs'), 0o755);
-        for (const pm of ['npm', 'pnpm', 'yarn', 'bun']) {
-            const shim = path.join(shimDir, pm);
-            await fsp.writeFile(
-                shim,
-                `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`,
-            );
-            await fsp.chmod(shim, 0o755);
-        }
+        // 1. Sandbox is already set up via install.sh in the Docker image.
+        //    Real shims live at ~/.ringfence/bin/ and are on PATH.
 
         // 2. Plant a fixture file in the real $HOME so we can verify the
         //    sandbox can't see arbitrary host-home content.
         await fsp.writeFile(HOST_FIXTURE_PATH, HOST_FIXTURE_CONTENT);
 
         // 3. Synthetic project with planted secrets + the leak probe.
+        testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), 'ringfence-sec-'));
         workdir = path.join(testRoot, 'project');
         await fsp.mkdir(workdir);
         envEnvFileBefore = 'DB_PASSWORD=hunter2\nAPI_KEY=preshared-zZz\n';
@@ -127,12 +113,9 @@ describe('security: third-party install scripts cannot leak secrets', suiteOpts,
             ),
         );
 
-        // 4. Spawn npm install via the shim with planted secret env vars
-        //    and the RINGFENCE_HOME override pointing at our fresh shim dir.
+        // 4. Spawn npm install via the real shim on PATH with planted secret env vars.
         const env = {
             ...process.env,
-            RINGFENCE_HOME: ringfenceHome,
-            PATH: `${shimDir}:${process.env.PATH}`,
             AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
             NPM_TOKEN: 'npm_planted_leak',
             GITHUB_TOKEN: 'ghp_planted_leak',

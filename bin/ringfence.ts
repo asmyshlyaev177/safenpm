@@ -51,36 +51,43 @@ function execPassthrough(realBin: string, args: readonly string[]): Promise<neve
     });
 }
 
+const SETUP_RUNNERS: Record<string, string> = {
+    npm: 'npx',
+    pnpm: 'pnpm exec',
+    yarn: 'yarn',
+    bun: 'bunx',
+};
+
+function getSetupCommand(): string {
+    const pmArg = process.argv[2];
+    if (pmArg && SETUP_RUNNERS[pmArg]) return `${SETUP_RUNNERS[pmArg]} ringfence-setup`;
+    const ua = process.env.npm_config_user_agent ?? '';
+    for (const [prefix, runner] of Object.entries(SETUP_RUNNERS)) {
+        if (ua.startsWith(`${prefix}/`)) return `${runner} ringfence-setup`;
+    }
+    return 'npx ringfence-setup';
+}
+
 function ensureSetup(): boolean {
     if (fs.existsSync(SHIM_DIR)) return true;
     const installer = path.join(ROOT, 'install.sh');
-    if (!fs.existsSync(installer)) return false;
+    if (!fs.existsSync(installer)) {
+        log.warn(`shims not installed. Run:  ${getSetupCommand()}`);
+        return false;
+    }
     log.info('running first-time setup...');
     const result = spawnSync(installer, [], { stdio: 'inherit', cwd: ROOT });
-    return result.status === 0;
-}
-
-function ensureInit(): boolean {
-    const pkgPath = path.join(process.cwd(), 'package.json');
-    if (!fs.existsSync(pkgPath)) return false;
-    const target = path.join(process.cwd(), 'scripts', 'ringfence-bootstrap.cjs');
-    if (fs.existsSync(target)) return true;
-    const initScript = path.join(ROOT, 'scripts', 'init.cjs');
-    if (!fs.existsSync(initScript)) return false;
-    log.info('initializing project bootstrap...');
-    const result = spawnSync(process.execPath, [initScript], {
-        stdio: 'inherit',
-        cwd: process.cwd(),
-    });
+    if (result.status !== 0) {
+        log.warn(`setup failed. Run:  ${getSetupCommand()}`);
+    }
     return result.status === 0;
 }
 
 async function main(): Promise<void> {
     const [pmArg, ...args] = process.argv.slice(2);
 
-    if (!pmArg || pmArg === '--init') {
+    if (!pmArg) {
         ensureSetup();
-        ensureInit();
         return;
     }
 

@@ -5,7 +5,7 @@
 //   1. First sandboxed install succeeds (secrets masked, no TTY error)
 //   2. Second sandboxed install succeeds (no ENOTEMPTY, no TTY prompt)
 //   3. Secrets are still masked on the second run
-//   4. Exit code is 0 (not ELIFECYCLE 1 from preinstall-bootstrap)
+//   4. Exit code is 0 (not ELIFECYCLE)
 //
 // Test isolation:
 //   - A self-contained shim is built in a tempdir per test run.
@@ -56,17 +56,6 @@ function setup(): {
     const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ringfence-2nd-'));
     const workdir = path.join(testRoot, 'project');
     fs.mkdirSync(workdir, { recursive: true });
-    const ringfenceHome = path.join(testRoot, 'ringfence');
-    const shimDir = path.join(ringfenceHome, 'bin');
-    fs.mkdirSync(shimDir, { recursive: true });
-
-    fs.copyFileSync(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
-    fs.chmodSync(path.join(shimDir, 'ringfence.mjs'), 0o755);
-    for (const pm of ['npm', 'pnpm', 'yarn', 'bun']) {
-        const shim = path.join(shimDir, pm);
-        fs.writeFileSync(shim, `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`);
-        fs.chmodSync(shim, 0o755);
-    }
 
     fs.writeFileSync(path.join(workdir, '.env'), 'DB_PASSWORD=hunter2\nAPI_KEY=secret\n');
     fs.writeFileSync(path.join(workdir, 'prod.pem'), '-----BEGIN PRIVATE KEY-----\n');
@@ -90,8 +79,6 @@ function setup(): {
         return Object.fromEntries(
             Object.entries({
                 ...process.env,
-                PATH: `${shimDir}:${process.env.PATH}`,
-                RINGFENCE_HOME: ringfenceHome,
                 RINGFENCE_RESULTS_FILE: resultsFile,
                 AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
                 NPM_TOKEN: 'npm_planted_leak',
@@ -193,13 +180,12 @@ describe(
 
 // ---------------------------------------------------------------------------
 // Non-install commands (build, test, run) must pass through cleanly without
-// the bootstrap killing the outer process or requiring RINGFENCE_BYPASS.
+// without the shim rejecting the command or requiring RINGFENCE_BYPASS.
 // ---------------------------------------------------------------------------
 
 function setupNonInstall(): {
     buildOutput: string;
     testRoot: string;
-    shimDir: string;
     workdir: string;
 } | null {
     if (skipReason) return null;
@@ -207,17 +193,6 @@ function setupNonInstall(): {
     const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ringfence-noninst-'));
     const workdir = path.join(testRoot, 'project');
     fs.mkdirSync(workdir, { recursive: true });
-    const ringfenceHome = path.join(testRoot, 'ringfence');
-    const shimDir = path.join(ringfenceHome, 'bin');
-    fs.mkdirSync(shimDir, { recursive: true });
-
-    fs.copyFileSync(BUNDLE, path.join(shimDir, 'ringfence.mjs'));
-    fs.chmodSync(path.join(shimDir, 'ringfence.mjs'), 0o755);
-    for (const pm of ['npm', 'pnpm', 'yarn', 'bun']) {
-        const shim = path.join(shimDir, pm);
-        fs.writeFileSync(shim, `#!/usr/bin/env bash\nexec "${shimDir}/ringfence.mjs" ${pm} "$@"\n`);
-        fs.chmodSync(shim, 0o755);
-    }
 
     // Plant secrets so the sandbox has work to do even for non-install cmds
     fs.writeFileSync(path.join(workdir, '.env'), 'DB_PASSWORD=hunter2\n');
@@ -241,24 +216,16 @@ function setupNonInstall(): {
         ),
     );
 
-    function makeEnv(): Record<string, string> {
-        return Object.fromEntries(
-            Object.entries({
-                ...process.env,
-                PATH: `${shimDir}:${process.env.PATH}`,
-                RINGFENCE_HOME: ringfenceHome,
-                AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
-                CI: 'true',
-            }).filter(([_, v]) => v !== undefined),
-        );
-    }
+    const env = {
+        ...process.env,
+        AWS_SECRET_ACCESS_KEY: 'AKIA-planted-leak-me',
+        CI: 'true',
+    };
 
-    const env = makeEnv();
-
-    // First do an install so node_modules and bootstrap are in place
+    // First do an install so node_modules is in place
     execFileSync('npm', ['install', '--ignore-scripts'], { cwd: workdir, env, stdio: 'pipe' });
 
-    return { buildOutput, testRoot, shimDir, workdir };
+    return { buildOutput, testRoot, workdir };
 }
 
 const nonInstCtx = setupNonInstall();
@@ -271,18 +238,13 @@ describe('non-install commands: build and test pass through cleanly', { skip: sk
 
     if (!nonInstCtx) return;
 
-    const envBuilder = () =>
-        Object.fromEntries(
-            Object.entries({
-                ...process.env,
-                PATH: `${nonInstCtx.shimDir}:${process.env.PATH}`,
-                CI: 'true',
-            }).filter(([_, v]) => v !== undefined),
-        );
+    const envBuilder = () => ({
+        ...process.env,
+        CI: 'true',
+    });
 
     test('npm run build exits 0 and produces output', () => {
         const env = envBuilder();
-        env.RINGFENCE_HOME = path.join(nonInstCtx.testRoot, 'ringfence');
         execFileSync('npm', ['run', 'build'], { cwd: nonInstCtx.workdir, env, stdio: 'pipe' });
         assert.ok(fs.existsSync(nonInstCtx.buildOutput), 'build-output.txt should exist');
         assert.equal(fs.readFileSync(nonInstCtx.buildOutput, 'utf8'), 'built');
@@ -290,13 +252,11 @@ describe('non-install commands: build and test pass through cleanly', { skip: sk
 
     test('npm test exits 0', () => {
         const env = envBuilder();
-        env.RINGFENCE_HOME = path.join(nonInstCtx.testRoot, 'ringfence');
         execFileSync('npm', ['test'], { cwd: nonInstCtx.workdir, env, stdio: 'pipe' });
     });
 
     test('npm run build second time (non-install idempotency)', () => {
         const env = envBuilder();
-        env.RINGFENCE_HOME = path.join(nonInstCtx.testRoot, 'ringfence');
         fs.rmSync(nonInstCtx.buildOutput, { force: true });
         execFileSync('npm', ['run', 'build'], { cwd: nonInstCtx.workdir, env, stdio: 'pipe' });
         assert.ok(fs.existsSync(nonInstCtx.buildOutput), 'build-output.txt should exist');
@@ -306,7 +266,6 @@ describe('non-install commands: build and test pass through cleanly', { skip: sk
     // Run pnpm through its shim too, to verify cross-PM pass-through
     test('pnpm run build exits 0', () => {
         const env = envBuilder();
-        env.RINGFENCE_HOME = path.join(nonInstCtx.testRoot, 'ringfence');
         if (nonInstCtx.workdir)
             fs.rmSync(path.join(nonInstCtx.workdir, 'build-output.txt'), { force: true });
         execFileSync('pnpm', ['run', 'build'], { cwd: nonInstCtx.workdir, env, stdio: 'pipe' });
@@ -316,7 +275,6 @@ describe('non-install commands: build and test pass through cleanly', { skip: sk
 
     test('npm exec (non-install) exits 0', () => {
         const env = envBuilder();
-        env.RINGFENCE_HOME = path.join(nonInstCtx.testRoot, 'ringfence');
         execFileSync('npm', ['exec', '--', 'node', '-e', 'process.exit(0)'], {
             cwd: nonInstCtx.workdir,
             env,

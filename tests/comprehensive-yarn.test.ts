@@ -7,7 +7,7 @@ import * as path from 'node:path';
 import {
     BUNDLE, PROBE, HOST_FIXTURE_CONTENT,
     bwrapAvailable, pmAvailable, isLeak, probeVal,
-    createShimDir, createProject, runInstall,
+    createProject, runInstall,
     plantHostSecrets, cleanHostSecrets, hostFixturePath, type Results,
 } from './comprehensive-helpers.ts';
 
@@ -18,8 +18,6 @@ const skip = !bwrapAvailable() ? 'requires bwrap with user ns support' :
 
 let testRoot: string;
 let workdir: string;
-let ringfenceHome: string;
-let shimDir: string;
 let results: Results;
 let fixtureFile: string;
 
@@ -28,11 +26,9 @@ before(async () => {
     fixtureFile = hostFixturePath(PM);
     await plantHostSecrets(PM);
     testRoot = await fsp.mkdtemp(path.join(os.tmpdir(), `ringfence-comp-${PM}-`));
-    ringfenceHome = path.join(testRoot, 'ringfence');
-    shimDir = await createShimDir(ringfenceHome);
     workdir = path.join(testRoot, 'project');
     await createProject(workdir, PM);
-    results = runInstall(workdir, ringfenceHome, shimDir, PM);
+    results = runInstall(workdir, PM);
 });
 
 after(async () => {
